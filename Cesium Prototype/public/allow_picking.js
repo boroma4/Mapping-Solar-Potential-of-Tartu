@@ -1,4 +1,11 @@
 var Pickers_3DTile_Activated = true;
+
+async function fetchArea(id) {
+    const request = await fetch("/area/" + id);
+    const response = await request.json();
+    return response.area;
+}
+
 function active3DTilePicker() {
     var highlighted = {
         feature: undefined,
@@ -76,18 +83,21 @@ function active3DTilePicker() {
             // Highlight newly selected feature
             picked3DtileFeature.color = Cesium.Color.LIME;
             // Set feature infobox description
-            console.log(picked3DtileFeature);
-            var feature_DOITT_ID = picked3DtileFeature.getProperty('DOITT_ID');
-            selectedEntity.name = "DOITT ID: " + feature_DOITT_ID + "";
+            const id = picked3DtileFeature.getProperty("gml_id");
+            
+            selectedEntity.name = "ID: " + id + "";
             selectedEntity.description = 'Loading <div class="cesium-infoBox-loading"></div>';
             viewer.selectedEntity = selectedEntity;
-            selectedEntity.description = '<table class="cesium-infoBox-defaultTable"><tbody>' +
-                '<tr><th>BIN</th><td>' + picked3DtileFeature.getProperty('BIN') + '</td></tr>' +
-                '<tr><th>Height</th><td>' + picked3DtileFeature.getProperty('Height') + '</td></tr>' +
-                '<tr><th>Longitude</th><td>' + picked3DtileFeature.getProperty('Longitude') + '</td></tr>' +
-                '<tr><th>Latitude</th><td>' + picked3DtileFeature.getProperty('Latitude') + '</td></tr>' +
+
+            fetchArea(id).then((area) => {
+                selectedEntity.description = '<table class="cesium-infoBox-defaultTable"><tbody>' +
+                '<tr><th>roof area</th><td>' + area + " m2" + '</td></tr>' +
                 '</tbody></table>';
+            });
+
+ 
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 }
 active3DTilePicker()
+

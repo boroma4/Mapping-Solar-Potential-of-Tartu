@@ -1,10 +1,13 @@
 import xml.etree.ElementTree as ET
 from entites import Surface
 from time import time
+import json
+
 
 CORE = "{http://www.opengis.net/citygml/2.0}"
 GML = "{http://www.opengis.net/gml}"
 GEN = "{http://www.opengis.net/citygml/generics/2.0}"
+ID = "{http://www.opengis.net/gml}id"
 
 FILE_PATH = "../../Model/citygml/lod1-tartu"
 
@@ -21,6 +24,7 @@ def get_roof_height(building):
     return roof_height
 
 
+
 def write_xml_area_elemet(building, area):
     element = ET.Element(f"{GEN}doubleAttribute", {"name": "area"})
     subelement = ET.Element(f"{GEN}value")
@@ -30,8 +34,9 @@ def write_xml_area_elemet(building, area):
     building.append(element)
 
 
-def add_roof_areas_to_xml(buildings):
+def process_buildings(buildings, mp):
     for building in buildings:
+        id = building[0].attrib[ID]
         roof_height = get_roof_height(building)
 
         # https://epsg.io/3301, unit - meters
@@ -40,8 +45,10 @@ def add_roof_areas_to_xml(buildings):
 
             if surface.is_roof(roof_height):
                 area = round(surface.area(), 3)
+                mp[id] = area
                 write_xml_area_elemet(building, area)
                 break
+
 
 
 def main():
@@ -49,17 +56,23 @@ def main():
 
     tree = ET.parse(f"{FILE_PATH}.gml")
     root = tree.getroot()
-    buildings = root.findall(f"{CORE}cityObjectMember")
 
-    add_roof_areas_to_xml(buildings)
+    mp = {}
+    buildings = root.findall(f"{CORE}cityObjectMember")
+    process_buildings(buildings, mp)
+
     tree.write(f"{FILE_PATH}-with-area.gml")
+    with open('areas.json', 'w') as fp:
+        json.dump(mp, fp)
 
     duration = round(time() - start, 3)
     print(f"Time taken to add areas to Tartu city dataset: {duration}s")
 
 
+
 if __name__ == "__main__":
     main()
+
 
 
 
