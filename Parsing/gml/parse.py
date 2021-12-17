@@ -62,7 +62,7 @@ def main():
     process_buildings(buildings, mp)
 
     tree.write(f"{FILE_PATH}-with-area.gml")
-    with open('areas.json', 'w') as fp:
+    with open('../../Cesium/public/model/areas.json', 'w') as fp:
         json.dump(mp, fp)
 
     duration = round(time() - start, 3)
