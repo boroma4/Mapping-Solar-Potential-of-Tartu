@@ -9,7 +9,7 @@ GML = "{http://www.opengis.net/gml}"
 GEN = "{http://www.opengis.net/citygml/generics/2.0}"
 ID = "{http://www.opengis.net/gml}id"
 
-FILE_PATH = "../../Model/citygml/lod1-tartu"
+FILE_PATH = "../../Data/citygml/lod1-tartu"
 
 
 def get_roof_height(building):
