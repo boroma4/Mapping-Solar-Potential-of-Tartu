@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 from entites import Surface
 from time import time
 import json
+import sys
 
 
 CORE = "{http://www.opengis.net/citygml/2.0}"
@@ -53,8 +54,12 @@ def process_buildings(buildings, mp):
 
 def main():
     start = time()
+    path = sys.argv[1]
 
-    tree = ET.parse(f"{FILE_PATH}.gml")
+    if not path:
+        path = FILE_PATH
+
+    tree = ET.parse(path)
     root = tree.getroot()
 
     mp = {}
