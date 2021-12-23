@@ -3,3 +3,5 @@ Model/obj
 Model/slpk
 Model/tileset
 Model/citygml/*-area*
+__pycache__
+data

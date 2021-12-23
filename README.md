@@ -4,17 +4,17 @@
 
 https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html
 
-## Project structure
+### Running
 
+`pip install virtualenv`
 
-### Data (temporary)
+`virtualenv venv`
 
-Stores the CityGML file(s) of the Tartu city
+`source venv/bin/activate`
 
+`pip install -r requirements.txt`
 
-### Preprocessing
-
-Everything needed to convert CityGML file(s) to format(s) suitable for the project
+`python3 run.py`
 
 ### Cesium 
 
