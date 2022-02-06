@@ -1,6 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 import json
+from enum import Enum
 from lib.step import Step
 from lib.util.path import get_path_gml, get_path_json
 from shapely.geometry import Polygon
@@ -11,9 +12,15 @@ GEN = "{http://www.opengis.net/citygml/generics/2.0}"
 ID = "{http://www.opengis.net/gml}id"
 
 
+class Level(Enum):
+    LOD1 = 1
+    LOD2 = 2
+
+
 class Preprocessor(Step):
-    def __init__(self, file_gdrive_id):
+    def __init__(self, file_gdrive_id, level):
         self.__file_gdrive_id = file_gdrive_id
+        self.__level = level
 
     def execute(self):
         print("Parsing GML and extracting useful info...")
@@ -33,19 +40,25 @@ class Preprocessor(Step):
     def cleanup(self):
         os.remove(get_path_gml(self.__file_gdrive_id))
 
+
     def __process_buildings(self, buildings, attribute_map):
         for building in buildings:
             id = building[0].attrib[ID]
             roof_height = self.__get_roof_height(building)
+            attribute_map[id] = attribute_map.get(id, {})
 
             # https://epsg.io/3301, unit - meters
             for points_set in building.iter(f"{GML}posList"):
                 surface = Surface(points_set.text)
 
-                if surface.is_roof(roof_height):
-                    area = round(surface.area(), 3)
-                    attribute_map[id] = area
-                    break
+                should_process_lod1 = self.__level == Level.LOD1 and surface.is_lod1_roof(roof_height)
+                should_process_lod2 = self.__level == Level.LOD2 and surface.is_lod2_roof(roof_height)
+
+                if should_process_lod1 or should_process_lod2:
+                    area = surface.area()
+                    incline = surface.incline()
+                    attribute_map[id]["roofs"] = attribute_map[id].get("roofs", [])
+                    attribute_map[id]["roofs"].append({"area": area, "incline": incline})
 
     
     def __get_roof_height(self, building):
@@ -58,6 +71,7 @@ class Preprocessor(Step):
                 break
         
         return roof_height
+
 
 
 class Surface:
@@ -75,21 +89,30 @@ class Surface:
             self.points.append(Point(floats[i * 3: (i + 1) * 3]))
 
 
-    def is_roof(self, roof_height) -> bool:
-        self.is_roof = True
+    def is_lod1_roof(self, roof_height) -> bool:
+        is_roof = True
         for point in self.points:
             if point.z != roof_height:
-                self.is_roof = False
+                is_roof = False
                 break
         
-        return self.is_roof
+        return is_roof
+    
+
+    def is_lod2_roof(self, roof_height) -> bool:
+        return False
 
     
     def area(self) -> float:
         x = [p.x for p in self.points]
         y = [p.y for p in self.points]
-        return Polygon(zip(x, y)).area
 
+        return round(Polygon(zip(x, y)).area, 3)
+
+
+    def incline(self) -> float:
+        pass
+        
 
 
 class Point: 
