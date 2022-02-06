@@ -1,4 +1,4 @@
-from lib.step import Step
+from lib.step import IStep
 
 class Pipeline:
     def __init__(self):

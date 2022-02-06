@@ -1,10 +1,10 @@
 import os
 import xml.etree.ElementTree as ET
 import json
+import numpy as np
 from enum import Enum
-from lib.step import Step
+from lib.step import IStep
 from lib.util.path import get_path_gml, get_path_json
-from shapely.geometry import Polygon
 
 CORE = "{http://www.opengis.net/citygml/2.0}"
 GML = "{http://www.opengis.net/gml}"
@@ -17,7 +17,7 @@ class Level(Enum):
     LOD2 = 2
 
 
-class Preprocessor(Step):
+class Preprocessor(IStep):
     def __init__(self, file_gdrive_id, level):
         self.__file_gdrive_id = file_gdrive_id
         self.__level = level
@@ -76,7 +76,7 @@ class Preprocessor(Step):
 
 class Surface:
     def __init__(self, points_str: str) -> None:
-        self.points: list[Point] = []
+        self.points: list[list[float]] = []
         self.__add_points(points_str)
 
         
@@ -86,7 +86,7 @@ class Surface:
 
         for i in range(divisions):
             # add every 3 values
-            self.points.append(Point(floats[i * 3: (i + 1) * 3]))
+            self.points.append((floats[i * 3: (i + 1) * 3]))
 
 
     def is_lod1_roof(self, roof_height) -> bool:
@@ -102,22 +102,12 @@ class Surface:
     def is_lod2_roof(self, roof_height) -> bool:
         return False
 
-    
-    def area(self) -> float:
-        x = [p.x for p in self.points]
-        y = [p.y for p in self.points]
-
-        return round(Polygon(zip(x, y)).area, 3)
-
-
-    def incline(self) -> float:
-        pass
-        
-
-
-class Point: 
-    def __init__(self, values: list[float]) -> None:
-        [x, y, z] = values
-        self.x = x
-        self.y = y
-        self.z = z
+    # https://stackoverflow.com/questions/12642256/find-area-of-polygon-from-xyz-coordinates
+    def area(self):
+        #all edges
+        edges = self.points[1:] - self.points[0:1]
+        # row wise cross product
+        cross_product = np.cross(edges[:-1],edges[1:], axis=1)
+        #area of all triangles
+        area = np.linalg.norm(cross_product, axis=1) / 2
+        return sum(area)

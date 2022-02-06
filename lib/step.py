@@ -1,6 +1,6 @@
 # An interface to define each step in the pipeline
 
-class Step:
+class IStep:
     def execute(self):
         pass
     

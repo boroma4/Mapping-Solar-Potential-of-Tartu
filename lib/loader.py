@@ -1,10 +1,10 @@
 import os
 
-from lib.step import Step
+from lib.step import IStep
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from lib.util.path import get_path_gml
 
-class Loader(Step):
+class Loader(IStep):
     def __init__(self, file_gdrive_id):
         self.__file_gdrive_id = file_gdrive_id
 
