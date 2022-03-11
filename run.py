@@ -1,15 +1,14 @@
-from lib.pipeline import Pipeline
-from lib.loader import Loader
-from lib.preprocessor import Preprocessor, Level
+from lib.util.lod import Level
+from lib.preprocessor import Preprocessor
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--goose")
 
 if __name__ == "__main__":
-    # Google Drive ID of the CityGML file
-    test_id_lod1 = "1sSKGFI3d6Et4564yPZBDlfArEhkMDlsx"
-    pipeline = Pipeline()
+    args = parser.parse_args()
 
-    pipeline.add(Loader(test_id_lod1))
-    pipeline.add(Preprocessor(test_id_lod1, Level.LOD1))
+    preprocessor = Preprocessor()
+    preprocessor.process(Level.LOD1)
+    preprocessor.process(Level.LOD2)
 
-    pipeline.run()
-
-    # pipeline.cleanup()
