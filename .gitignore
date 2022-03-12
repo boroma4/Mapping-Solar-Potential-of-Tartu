@@ -5,3 +5,4 @@ Model/tileset
 Model/citygml/*-area*
 __pycache__
 data
+logs

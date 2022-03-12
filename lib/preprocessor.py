@@ -1,7 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 import json
-import functools
+import logging
 
 from lib.util.path import PathUtil
 from lib.util.lod import Level
@@ -23,7 +23,7 @@ class Preprocessor():
             file_path = os.path.join(data_dir_path, filename)
 
             if os.path.isfile(file_path) and file_path.endswith(".gml"):
-                print(f'Processing {filename}, level: {level}')
+                logging.info(f'Processing {filename}, level: {level}')
 
                 tree = ET.parse(file_path)
                 root = tree.getroot()
@@ -36,13 +36,13 @@ class Preprocessor():
                 tree.write(new_file_path)
 
                 json_name = filename.replace(".gml", "")
-                
+
                 with open(path_util.get_path_json(json_name), 'w') as fp:
                     json.dump(attribute_map, fp)
                 
-                print("Done\n")
+                logging.info("Done\n")
             else:
-                print(f'Ignoring file: {file_path}')
+                logging.info(f'Ignoring file: {file_path}')
 
 
     def __process_buildings(self, buildings, attribute_map, level):
@@ -72,11 +72,11 @@ class Preprocessor():
             count_total += 1
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
-                continue
+                attribute_map[id]["roofs"] = [{"area": 0, "incline": 0}]
 
             self.__update_tree(building, attribute_map, id)
         
-        print(f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
+        logging.info(f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
 
 
     def __update_tree(self, building, attributes, id):

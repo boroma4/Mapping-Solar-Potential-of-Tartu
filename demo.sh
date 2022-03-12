@@ -3,5 +3,4 @@
 
 python3 run.py
 cd Cesium
-npm run gen
-npm run start
+npm run gen && npm start

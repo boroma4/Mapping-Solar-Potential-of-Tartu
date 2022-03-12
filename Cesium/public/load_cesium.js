@@ -8,20 +8,20 @@ var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 }))
 Cesium.when(tileset.readyPromise).then(function (tileset) {
     viewer.flyTo(tileset);
-    // colorByHeight();
+    colorByArea();
 })
 
 // chroma.scale(['#fafa6e','#2A4858']).mode('lch').colors(6)
-function colorByHeight () {
+function colorByArea () {
     tileset.style = new Cesium.Cesium3DTileStyle({
         color: {
             conditions: [
-                ['${Height} >= 300', 'color("#FF442E")'],
-                ['${Height} >= 200', 'color("#FF8000")'],
-                ['${Height} >= 100', 'color("#E7A700")'],
-                ['${Height} >= 50', 'color("#CFC600")'],
-                ['${Height} >= 25', 'color("#A4B600")'],
-                ['${Height} >= 10', 'color("#6A9E00")'],
+                ['${area} >= 5000', 'color("#FF442E", 0.5)'],
+                ['${area} >= 3000', 'color("#FF8000", 0.5)'],
+                ['${area} >= 1000', 'color("#E7A700", 0.5)'],
+                ['${area} >= 500', 'color("#CFC600", 0.5)'],
+                ['${area} >= 100', 'color("#A4B600", 0.5)'],
+                ['${area} >= 0', 'color("#6A9E00", 0.5)'],
                 ['true', 'rgb(127, 59, 8)']
             ]
         }

@@ -83,10 +83,13 @@ function active3DTilePicker() {
             // Highlight newly selected feature
             picked3DtileFeature.color = Cesium.Color.LIME;
             // Set feature infobox description
-            const id = picked3DtileFeature.getProperty("gml_id");
+            const id = picked3DtileFeature.getProperty("str_id");
+            const area = picked3DtileFeature.getProperty("area");
+            
             // Display all the properties for a feature in the console log.
             const propertyNames = picked3DtileFeature.getPropertyNames();
             const length = propertyNames.length;
+
             for (let i = 0; i < length; ++i) {
                 const propertyName = propertyNames[i];
                 console.log(propertyName + ': ' + picked3DtileFeature.getProperty(propertyName));
@@ -96,11 +99,10 @@ function active3DTilePicker() {
             selectedEntity.description = 'Loading <div class="cesium-infoBox-loading"></div>';
             viewer.selectedEntity = selectedEntity;
 
-            fetchArea(id).then((area) => {
-                selectedEntity.description = '<table class="cesium-infoBox-defaultTable"><tbody>' +
-                '<tr><th>roof area</th><td>' + area + " m2" + '</td></tr>' +
-                '</tbody></table>';
-            });
+            selectedEntity.description = '<table class="cesium-infoBox-defaultTable"><tbody>' +
+            '<tr><th>roof area</th><td>' + area + " m2" + '</td></tr>' +
+            '</tbody></table>';
+
 
  
         }
