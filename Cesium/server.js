@@ -1,7 +1,6 @@
+
 var express = require('express');
 var compression = require('compression');
-
-
 var areas = require("./public/model/areas.json");
 
 var app = express();
@@ -19,3 +18,7 @@ app.get('/areas', function (req, res) {
 app.get('/area/:id', function (req, res) {
     res.send({area: areas[req.params.id]})
 });
+
+
+
+

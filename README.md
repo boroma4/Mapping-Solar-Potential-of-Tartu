@@ -15,7 +15,3 @@ https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html
 `pip install -r requirements.txt`
 
 `python3 run.py`
-
-### Cesium 
-
-Visualization prototype made with CesiumJS

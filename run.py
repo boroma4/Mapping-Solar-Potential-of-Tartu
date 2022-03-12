@@ -8,6 +8,7 @@ parser.add_argument("--goose")
 if __name__ == "__main__":
     args = parser.parse_args()
 
+    print("Preprocessing .gml files")
     preprocessor = Preprocessor()
     preprocessor.process(Level.LOD1)
     preprocessor.process(Level.LOD2)

@@ -84,6 +84,13 @@ function active3DTilePicker() {
             picked3DtileFeature.color = Cesium.Color.LIME;
             // Set feature infobox description
             const id = picked3DtileFeature.getProperty("gml_id");
+            // Display all the properties for a feature in the console log.
+            const propertyNames = picked3DtileFeature.getPropertyNames();
+            const length = propertyNames.length;
+            for (let i = 0; i < length; ++i) {
+                const propertyName = propertyNames[i];
+                console.log(propertyName + ': ' + picked3DtileFeature.getProperty(propertyName));
+            }
             
             selectedEntity.name = "ID: " + id + "";
             selectedEntity.description = 'Loading <div class="cesium-infoBox-loading"></div>';

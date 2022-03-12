@@ -1,9 +1,11 @@
 import os
 import xml.etree.ElementTree as ET
 import json
-import numpy as np
+import functools
+
 from lib.util.path import PathUtil
 from lib.util.lod import Level
+from lib.util.surface import Surface
 
 CORE = "{http://www.opengis.net/citygml/2.0}"
 GML = "{http://www.opengis.net/gml}"
@@ -14,8 +16,6 @@ ID = "{http://www.opengis.net/gml}id"
 class Preprocessor():
 
     def process(self, level):
-        print("Parsing GML files and extracting useful info...")
-
         path_util = PathUtil(level)
         data_dir_path = path_util.get_data_dir_path()
 
@@ -23,7 +23,7 @@ class Preprocessor():
             file_path = os.path.join(data_dir_path, filename)
 
             if os.path.isfile(file_path) and file_path.endswith(".gml"):
-                print(f'Processing {filename}')
+                print(f'Processing {filename}, level: {level}')
 
                 tree = ET.parse(file_path)
                 root = tree.getroot()
@@ -32,15 +32,23 @@ class Preprocessor():
                 buildings = root.findall(f"{CORE}cityObjectMember")
                 self.__process_buildings(buildings, attribute_map, level)
 
-                json_name = filename.replace(".gml", "")
+                new_file_path = os.path.join(data_dir_path, f"updated-{filename}")
+                tree.write(new_file_path)
 
+                json_name = filename.replace(".gml", "")
+                
                 with open(path_util.get_path_json(json_name), 'w') as fp:
                     json.dump(attribute_map, fp)
+                
+                print("Done\n")
             else:
                 print(f'Ignoring file: {file_path}')
 
 
     def __process_buildings(self, buildings, attribute_map, level):
+        count_total = 0
+        count_no_roofs = 0
+
         for building in buildings:
             id = building[0].attrib[ID]
             roof_height = self.__get_roof_height(building)
@@ -56,9 +64,40 @@ class Preprocessor():
                 if should_process_lod1 or should_process_lod2:
                     area = surface.area()
                     incline = surface.incline()
+
+                    # For writing to separate JSON
                     attribute_map[id]["roofs"] = attribute_map[id].get("roofs", [])
                     attribute_map[id]["roofs"].append({"area": area, "incline": incline})
+            
+            count_total += 1
+            if "roofs" not in attribute_map[id]:
+                count_no_roofs += 1
+                continue
 
+            self.__update_tree(building, attribute_map, id)
+        
+        print(f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
+
+
+    def __update_tree(self, building, attributes, id):
+        gen = "ns3"
+        roofs = attributes[id]["roofs"]
+        total_roof_area = 0
+
+        for roof in roofs:
+            total_roof_area += roof["area"]
+
+        id_tag = ET.SubElement(building[0], f'{gen}:stringAttribute')
+        area_tag = ET.SubElement(building[0], f'{gen}:doubleAttribute')
+
+        id_tag.attrib["name"] = "str_id"
+        area_tag.attrib["name"] = "area"
+
+        id_tag_value = ET.SubElement(id_tag, f'{gen}:value')
+        area_tag_value = ET.SubElement(area_tag, f'{gen}:value')
+
+        id_tag_value.text = id
+        area_tag_value.text = f'{total_roof_area}'
     
     def __get_roof_height(self, building):
         roof_height = 0.0
@@ -70,48 +109,3 @@ class Preprocessor():
                 break
         
         return roof_height
-
-
-
-class Surface:
-    def __init__(self, points_str: str) -> None:
-        self.points: list[list[float]] = []
-        self.__add_points(points_str)
-
-        
-    def __add_points(self, points_str: str) -> None:
-        floats = [float(e) for e in points_str.split(" ")]
-        divisions = len(floats) // 3
-
-        for i in range(divisions):
-            # add every 3 values
-            self.points.append((floats[i * 3: (i + 1) * 3]))
-
-
-    def is_lod1_roof(self, roof_height) -> bool:
-        is_roof = True
-        for point in self.points:
-            z = point[2]
-            if z != roof_height:
-                is_roof = False
-                break
-        
-        return is_roof
-    
-
-    def is_lod2_roof(self, roof_height) -> bool:
-        return False
-
-    # https://stackoverflow.com/questions/12642256/find-area-of-polygon-from-xyz-coordinates
-    def area(self):
-        poly = np.array(self.points)
-        #all edges
-        edges = poly[1:] - poly[0:1]
-        # row wise cross product
-        cross_product = np.cross(edges[:-1],edges[1:], axis=1)
-        #area of all triangles
-        area = np.linalg.norm(cross_product, axis=1) / 2
-        return sum(area)
-
-    def incline(self):
-        return 0.0
