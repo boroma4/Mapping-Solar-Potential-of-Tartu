@@ -14,7 +14,15 @@ def configure_logger():
         os.mkdir(dir_name)
     
     logs_path = os.path.join(dir_name, str(datetime.now()))
-    logging.basicConfig(level=logging.INFO)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler(logs_path),
+            logging.StreamHandler()
+        ]   
+    )
 
 
 def configure_parser():
@@ -30,6 +38,6 @@ if __name__ == "__main__":
 
     logging.info("Preprocessing .gml files\n")
     preprocessor = Preprocessor()
-    preprocessor.process(Level.LOD1)
+    # preprocessor.process(Level.LOD1)
     preprocessor.process(Level.LOD2)
 

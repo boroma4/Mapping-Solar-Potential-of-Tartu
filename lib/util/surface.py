@@ -1,5 +1,5 @@
 import numpy as np
-
+from lib.util import geometry
 
 class Surface:
     def __init__(self, points_str: str) -> None:
@@ -8,38 +8,34 @@ class Surface:
 
         
     def __add_points(self, points_str: str) -> None:
+            
         floats = [float(e) for e in points_str.split(" ")]
         divisions = len(floats) // 3
-
         for i in range(divisions):
             # add every 3 values
+            current_points = floats[i * 3: (i + 1) * 3]
+            if self.points and current_points == self.points[-1]:
+                continue
+
             self.points.append((floats[i * 3: (i + 1) * 3]))
 
 
-    def is_lod1_roof(self, roof_height) -> bool:
-        is_roof = True
-        for point in self.points:
-            z = point[2]
-            if z != roof_height:
-                is_roof = False
-                break
-        
-        return is_roof
+
+
+    def is_roof(self, z_max, z_min) -> bool:
+        lowest_z = min([z for _, _, z in self.points])
+        _, tilt = self.angles()
+
+        return lowest_z > (z_min + (z_max - z_min) / 2) and (tilt <= 60 or tilt >= 120)
+
     
-
-    def is_lod2_roof(self, roof_height) -> bool:
-        return True
-
-    # https://stackoverflow.com/questions/12642256/find-area-of-polygon-from-xyz-coordinates
+    #area of polygon poly
     def area(self):
-        poly = np.array(self.points)
-        #all edges
-        edges = poly[1:] - poly[0:1]
-        # row wise cross product
-        cross_product = np.cross(edges[:-1],edges[1:], axis=1)
-        #area of all triangles
-        area = np.linalg.norm(cross_product, axis=1) / 2
-        return sum(area)
+        return geometry.area(self.points)
 
-    def incline(self):
-        return 0.0
+        
+    def angles(self):
+        normal = geometry.get_normal(self.points)
+        az, tilt = geometry.get_angles(normal)
+        return az, tilt
+

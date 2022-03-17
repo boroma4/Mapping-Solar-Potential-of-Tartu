@@ -12,6 +12,7 @@ GML = "{http://www.opengis.net/gml}"
 GEN = "{http://www.opengis.net/citygml/generics/2.0}"
 ID = "{http://www.opengis.net/gml}id"
 
+UPDATED_PREFIX = "updated-"
 
 class Preprocessor():
 
@@ -21,8 +22,9 @@ class Preprocessor():
 
         for filename in os.listdir(data_dir_path):
             file_path = os.path.join(data_dir_path, filename)
+            is_valid_prefix_and_suffix = file_path.endswith(".gml") and not filename.startswith(UPDATED_PREFIX)
 
-            if os.path.isfile(file_path) and file_path.endswith(".gml"):
+            if os.path.isfile(file_path) and is_valid_prefix_and_suffix:
                 logging.info(f'Processing {filename}, level: {level}')
 
                 tree = ET.parse(file_path)
@@ -32,7 +34,7 @@ class Preprocessor():
                 buildings = root.findall(f"{CORE}cityObjectMember")
                 self.__process_buildings(buildings, attribute_map, level)
 
-                new_file_path = os.path.join(data_dir_path, f"updated-{filename}")
+                new_file_path = os.path.join(data_dir_path, f"{UPDATED_PREFIX}{filename}")
                 tree.write(new_file_path)
 
                 json_name = filename.replace(".gml", "")
@@ -42,7 +44,7 @@ class Preprocessor():
                 
                 logging.info("Done\n")
             else:
-                logging.info(f'Ignoring file: {file_path}')
+                logging.info(f'Ignoring file: {file_path}\n')
 
 
     def __process_buildings(self, buildings, attribute_map, level):
@@ -51,28 +53,29 @@ class Preprocessor():
 
         for building in buildings:
             id = building[0].attrib[ID]
-            roof_height = self.__get_roof_height(building)
+            maximum, minimum = self.__get_z_range(building)
             attribute_map[id] = attribute_map.get(id, {})
 
             # https://epsg.io/3301, unit - meters
-            for points_set in building.iter(f"{GML}posList"):
-                surface = Surface(points_set.text)
+            for points in building.iter(f"{GML}posList"):
+                surface = Surface(points.text)
 
-                should_process_lod1 = level == Level.LOD1 and surface.is_lod1_roof(roof_height)
-                should_process_lod2 = level == Level.LOD2 and surface.is_lod2_roof(roof_height)
-
-                if should_process_lod1 or should_process_lod2:
+                if surface.is_roof(maximum, minimum):
                     area = surface.area()
-                    incline = surface.incline()
+                    azimuth, tilt = surface.angles()
+
+                    if id == "etak_7495176_hooned_lod2":
+                        print("SURFACE", area)
 
                     # For writing to separate JSON
                     attribute_map[id]["roofs"] = attribute_map[id].get("roofs", [])
-                    attribute_map[id]["roofs"].append({"area": area, "incline": incline})
+                    attribute_map[id]["roofs"].append({"area": area, "azimuth": azimuth, "tilt": tilt})
+
             
             count_total += 1
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
-                attribute_map[id]["roofs"] = [{"area": 0, "incline": 0}]
+                attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
 
             self.__update_tree(building, attribute_map, id)
         
@@ -99,13 +102,14 @@ class Preprocessor():
         id_tag_value.text = id
         area_tag_value.text = f'{total_roof_area}'
     
-    def __get_roof_height(self, building):
-        roof_height = 0.0
+    
+    def __get_z_range(self, building):
+        maximum, minimum = 0, 0
 
         for attribute in building.iter(f"{GEN}doubleAttribute"):
             if attribute.attrib["name"] == "z_max":
-                height = attribute.find(f"{GEN}value").text
-                roof_height = float(height)
-                break
+                maximum = float(attribute[0].text)
+            if attribute.attrib["name"] == "z_min":
+                minimum = float(attribute[0].text)
         
-        return roof_height
+        return maximum, minimum

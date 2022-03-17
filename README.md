@@ -8,10 +8,6 @@ https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html
 
 `pip install virtualenv`
 
-`virtualenv venv`
-
-`source venv/bin/activate`
-
-`pip install -r requirements.txt`
+`virtualenv venv && source venv/bin/activate && pip install -r requirements.txt`
 
 `python3 run.py`
