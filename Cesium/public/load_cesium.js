@@ -3,8 +3,6 @@ Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOi
 var viewer = new Cesium.Viewer('cesiumContainer');
 var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
      url: "../model/tileset.json",
-    // url: "http://193.196.37.89:8092/AssetsHFT/3DTile_Niedernhalle/tileset.json",
-    // url: "http://steinbeis-3dps.eu:8080/3DContainerTile/collections/NewYork/3DTiles/",
 }))
 Cesium.when(tileset.readyPromise).then(function (tileset) {
     viewer.flyTo(tileset);

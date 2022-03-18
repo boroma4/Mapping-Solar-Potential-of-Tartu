@@ -20,8 +20,6 @@ class Surface:
             self.points.append((floats[i * 3: (i + 1) * 3]))
 
 
-
-
     def is_roof(self, z_max, z_min) -> bool:
         lowest_z = min([z for _, _, z in self.points])
         _, tilt = self.angles()
@@ -29,7 +27,6 @@ class Surface:
         return lowest_z > (z_min + (z_max - z_min) / 2) and (tilt <= 60 or tilt >= 120)
 
     
-    #area of polygon poly
     def area(self):
         return geometry.area(self.points)
 
