@@ -1,8 +1,9 @@
 from argparse import ArgumentError
 import os
 from lib.util.lod import Level
- 
+
 DATA_PATH = "data"
+
 
 class PathUtil:
     def __init__(self, data_path, lod):
@@ -16,7 +17,6 @@ class PathUtil:
             return os.path.join(self.data_path, 'lod2')
         else:
             raise ArgumentError("Invalid LOD")
-
 
     def get_path_gml(self, id):
         return os.path.join(self.get_data_dir_path(), f'{id}.gml')

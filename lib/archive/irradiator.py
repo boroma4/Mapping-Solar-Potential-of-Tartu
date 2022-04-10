@@ -1,15 +1,15 @@
 #
-# 
-# 
-# 
-# 
+#
+#
+#
+#
 # NOT USED
-# 
-# 
-# 
-# 
-# 
-# 
+#
+#
+#
+#
+#
+#
 
 import pytz
 
@@ -35,17 +35,21 @@ class Irradiator:
 
         print(module["Area"])
 
-        temperature_model_parameters = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS['sapm']['open_rack_glass_glass']
+        temperature_model_parameters = pvlib.temperature.TEMPERATURE_MODEL_PARAMETERS[
+            'sapm']['open_rack_glass_glass']
 
         loc = Location(latitude, longitude, TIMEZONE)
         mount = FixedMount(surface_tilt=0, surface_azimuth=180)
-        array = Array(mount=mount, module_parameters=module, temperature_model_parameters=temperature_model_parameters)
+        array = Array(
+            mount=mount,
+            module_parameters=module,
+            temperature_model_parameters=temperature_model_parameters)
 
-        weather = pvlib.iotools.get_pvgis_tmy(latitude, longitude, map_variables=True)[0]
+        weather = pvlib.iotools.get_pvgis_tmy(
+            latitude, longitude, map_variables=True)[0]
 
         system = PVSystem(arrays=[array], inverter_parameters=inverter)
-        mc = ModelChain(system, loc)  
+        mc = ModelChain(system, loc)
         mc.run_model(weather)
-
 
         annual_energy = mc.results.ac

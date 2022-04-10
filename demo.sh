@@ -8,5 +8,5 @@ pip install -r requirements.txt
 
 
 python3 run.py
-cd Cesium
+cd cesium-prototype-js
 npm run gen && npm start
