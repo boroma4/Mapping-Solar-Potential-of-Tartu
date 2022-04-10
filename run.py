@@ -1,4 +1,5 @@
 from lib.preprocessor import Preprocessor
+from lib.util.lod import Level
 from lib.pvgis_api import PvgisRequest
 from lib.solar import calculate_peak_power_kpw, calculate_usable_area
 from datetime import datetime
@@ -43,10 +44,9 @@ if __name__ == "__main__":
     # preprocessor.process(Level.LOD1)
     # preprocessor.process(Level.LOD2)
 
+    # will be inputs
     latitude = 58.3780
     longitude = 26.7290
-
-    # will be inputs
     roof_area = 500  # m2
     efficiency = 0.20  # efficiency of the PV system
 
@@ -58,6 +58,7 @@ if __name__ == "__main__":
         .set_angle(45) \
         .set_azimuth(0) \
         .set_peak_power_kwp(kpw) \
+        .set_mounting_place("building") \
         .optimize_angles() \
         .send()
 

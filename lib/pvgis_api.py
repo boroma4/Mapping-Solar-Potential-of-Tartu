@@ -44,6 +44,13 @@ class PvgisRequest:
         self.azimuth = azimuth
         return self
 
+    def set_mounting_place(self, mounting_place):
+        if mounting_place not in ["free", "building"]:
+            raise Exception("Wrong mounting place value")
+
+        self.mounting_place = mounting_place
+        return self
+
     def optimize_angles(self):
         self.optimal_angles = True
         return self

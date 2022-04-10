@@ -37,22 +37,24 @@ def area(poly):
     result = np.dot(total, unit_normal(poly[0], poly[1], poly[2]))
     return abs(result / 2)
 
-
 def get_angles(normal):
     """Get the azimuth and altitude from the normal vector."""
     # -- Convert from polar system to azimuth
 
+    # TODO: convert to [-180, 180]
     azimuth = 90 - math.degrees(math.atan2(normal[1], normal[0]))
     if azimuth >= 360.0:
         azimuth -= 360.0
     elif azimuth < 0.0:
         azimuth += 360.0
+
+    #[0, 90]
     t = math.sqrt(normal[0]**2 + normal[1]**2)
     if t == 0:
         tilt = 0.0
     else:
         # 0 for flat roof, 90 for wall
-        tilt = 90 - math.degrees(math.atan(normal[2] / t))
+        tilt = 90 - abs(math.degrees(math.atan(normal[2] / t)))
     tilt = round(tilt, 3)
 
     return azimuth, tilt

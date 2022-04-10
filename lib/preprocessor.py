@@ -39,7 +39,7 @@ class Preprocessor():
 
                 attribute_map = {}
                 buildings = root.findall(f"{CORE}cityObjectMember")
-                self.__process_buildings(buildings, attribute_map, level)
+                self.__process_buildings(buildings, attribute_map)
 
                 new_file_path = os.path.join(
                     data_dir_path, f"{UPDATED_PREFIX}{filename}")
@@ -57,20 +57,20 @@ class Preprocessor():
             else:
                 logging.info(f'Ignoring file: {file_path}\n')
 
-    def __process_buildings(self, buildings, attribute_map, level):
+    def __process_buildings(self, buildings, attribute_map):
         count_total = 0
         count_no_roofs = 0
 
         for building in buildings:
             id = building[0].attrib[ID]
-            maximum, minimum = self.__get_z_range(building)
+            # maximum, minimum = self.__get_z_range(building)
             attribute_map[id] = attribute_map.get(id, {})
 
             # https://epsg.io/3301, unit - meters
             for points in building.iter(f"{GML}posList"):
                 surface = Surface(points.text)
 
-                if surface.is_roof(maximum, minimum):
+                if surface.is_roof():
                     area = surface.area()
                     azimuth, tilt = surface.angles()
 
@@ -86,7 +86,7 @@ class Preprocessor():
                 count_no_roofs += 1
                 attribute_map[id]["roofs"] = [
                     {"area": 0, "azimuth": 0, "tilt": 0}]
-
+            
             self.__update_tree(building, attribute_map, id)
 
         logging.info(
