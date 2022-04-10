@@ -1,6 +1,5 @@
-from datetime import date
-from lib.util.lod import Level
 from lib.preprocessor import Preprocessor
+from lib.pvgis_api import PvgisRequest
 from datetime import datetime
 
 import argparse
@@ -27,7 +26,7 @@ def configure_logger():
 
 def configure_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--goose")
+    parser.add_argument("--datapath")
 
     return parser
 
@@ -35,9 +34,22 @@ if __name__ == "__main__":
     configure_logger()
     parser = configure_parser()
     args = parser.parse_args()
-
-    logging.info("Preprocessing .gml files\n")
-    preprocessor = Preprocessor()
+    data_path = args.datapath
+    preprocessor = Preprocessor(data_path)    
     # preprocessor.process(Level.LOD1)
-    preprocessor.process(Level.LOD2)
+    # preprocessor.process(Level.LOD2)
+
+    latitude = 58.3780
+    longitude = 26.7290
+
+    res = PvgisRequest() \
+        .set_location(longitude, latitude) \
+        .set_angle(45) \
+        .set_azimuth(0) \
+        .set_peak_power_kw(1) \
+        .send()
+    
+    logging.info(res)
+
+
 

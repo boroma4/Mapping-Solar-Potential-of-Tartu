@@ -2,6 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import json
 import logging
+import time
 
 from lib.util.path import PathUtil
 from lib.util.lod import Level
@@ -16,8 +17,11 @@ UPDATED_PREFIX = "updated-"
 
 class Preprocessor():
 
+    def __init__(self, data_path) -> None:
+        self.data_path = data_path
+
     def process(self, level):
-        path_util = PathUtil(level)
+        path_util = PathUtil(self.data_path, level)
         data_dir_path = path_util.get_data_dir_path()
 
         for filename in os.listdir(data_dir_path):
@@ -26,6 +30,7 @@ class Preprocessor():
 
             if os.path.isfile(file_path) and is_valid_prefix_and_suffix:
                 logging.info(f'Processing {filename}, level: {level}')
+                start_time = time.time()
 
                 tree = ET.parse(file_path)
                 root = tree.getroot()
@@ -42,7 +47,10 @@ class Preprocessor():
                 with open(path_util.get_path_json(json_name), 'w') as fp:
                     json.dump(attribute_map, fp)
                 
-                logging.info("Done\n")
+                end_time = time.time()
+                duration = round(end_time - start_time, 3)
+
+                logging.info(f"Done. Took {duration}s\n")
             else:
                 logging.info(f'Ignoring file: {file_path}\n')
 
@@ -64,15 +72,13 @@ class Preprocessor():
                     area = surface.area()
                     azimuth, tilt = surface.angles()
 
-                    if id == "etak_7495176_hooned_lod2":
-                        print("SURFACE", area)
-
                     # For writing to separate JSON
                     attribute_map[id]["roofs"] = attribute_map[id].get("roofs", [])
                     attribute_map[id]["roofs"].append({"area": area, "azimuth": azimuth, "tilt": tilt})
 
             
             count_total += 1
+
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
                 attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
@@ -101,7 +107,6 @@ class Preprocessor():
 
         id_tag_value.text = id
         area_tag_value.text = f'{total_roof_area}'
-    
     
     def __get_z_range(self, building):
         maximum, minimum = 0, 0
