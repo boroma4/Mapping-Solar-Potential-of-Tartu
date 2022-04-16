@@ -19,11 +19,14 @@ class Surface:
 
             self.points.append((floats[i * 3: (i + 1) * 3]))
 
-    def is_roof(self) -> bool:
+    def is_roof(self, z_min) -> bool:
         _, tilt = self.angles()
 
-        return tilt <= 60
-        
+        is_tilted = tilt <= 60
+        is_floor = all([point[2] == z_min for point in self.points])
+
+        return is_tilted and not is_floor
+
     def area(self):
         return geometry.area(self.points)
 

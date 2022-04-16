@@ -1,13 +1,12 @@
-from lib.preprocessor import Preprocessor
-from lib.util.lod import Level
 from lib.pvgis_api import PvgisRequest
 from lib.solar import calculate_peak_power_kpw, calculate_usable_area
-from datetime import datetime
+from flask import Flask, request
 
-import argparse
 import logging
 import os
+import datetime
 
+app = Flask(__name__)
 
 def configure_logger():
     dir_name = "logs"
@@ -26,29 +25,22 @@ def configure_logger():
         ]
     )
 
-
-def configure_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--datapath")
-
-    return parser
+@app.route('/')
+def hello():
+    return 'Hello, World!'
 
 
-if __name__ == "__main__":
-    configure_logger()
-    parser = configure_parser()
-    args = parser.parse_args()
-    data_path = args.datapath
+@app.route('/solar', methods=["GET"])
+def solar():
+    args = request.args
 
-    preprocessor = Preprocessor(data_path)
-    # preprocessor.process(Level.LOD1)
-    # preprocessor.process(Level.LOD2)
+    building_id = args.get("id")
+    efficiency = args.get("efficiency", default=0.20, type=float) # efficiency of the PV system
 
-    # will be inputs
+    # to get from preprocessed data
     latitude = 58.3780
     longitude = 26.7290
     roof_area = 500  # m2
-    efficiency = 0.20  # efficiency of the PV system
 
     usable_area = calculate_usable_area(roof_area)
     kpw = calculate_peak_power_kpw(usable_area, efficiency)
@@ -61,5 +53,9 @@ if __name__ == "__main__":
         .set_mounting_place("building") \
         .optimize_angles() \
         .send()
+    
+    return res
 
-    logging.info(res)
+if __name__ == "__main__":
+    app.run('0.0.0.0', '8000', debug=True)
+

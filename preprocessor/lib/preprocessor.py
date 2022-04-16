@@ -5,7 +5,6 @@ import logging
 import time
 
 from lib.util.path import PathUtil
-from lib.util.lod import Level
 from lib.util.surface import Surface
 
 CORE = "{http://www.opengis.net/citygml/2.0}"
@@ -43,6 +42,7 @@ class Preprocessor():
 
                 new_file_path = os.path.join(
                     data_dir_path, f"{UPDATED_PREFIX}{filename}")
+
                 tree.write(new_file_path)
 
                 json_name = filename.replace(".gml", "")
@@ -63,22 +63,26 @@ class Preprocessor():
 
         for building in buildings:
             id = building[0].attrib[ID]
-            # maximum, minimum = self.__get_z_range(building)
             attribute_map[id] = attribute_map.get(id, {})
+            _, z_min = self.__get_z_range(building)
 
             # https://epsg.io/3301, unit - meters
             for points in building.iter(f"{GML}posList"):
                 surface = Surface(points.text)
 
-                if surface.is_roof():
+                if surface.is_roof(z_min):
                     area = surface.area()
                     azimuth, tilt = surface.angles()
 
                     # For writing to separate JSON
                     attribute_map[id]["roofs"] = attribute_map[id].get(
                         "roofs", [])
-                    attribute_map[id]["roofs"].append(
-                        {"area": area, "azimuth": azimuth, "tilt": tilt})
+
+                    roof_attribs = {
+                        "area": area, "azimuth": azimuth, "tilt": tilt}
+
+                    if roof_attribs not in attribute_map[id]["roofs"]:
+                        attribute_map[id]["roofs"].append(roof_attribs)
 
             count_total += 1
 
@@ -87,18 +91,21 @@ class Preprocessor():
                 attribute_map[id]["roofs"] = [
                     {"area": 0, "azimuth": 0, "tilt": 0}]
             
-            self.__update_tree(building, attribute_map, id)
+            # total roof area
+            roofs = attribute_map[id]["roofs"]
+            total_roof_area = 0
+
+            for roof in roofs:
+                total_roof_area += roof["area"]
+
+            attribute_map[id]["total_roof_area"] = total_roof_area
+            self.__update_tree(building, total_roof_area, id)
 
         logging.info(
             f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
 
-    def __update_tree(self, building, attributes, id):
+    def __update_tree(self, building, total_roof_area, id):
         gen = "ns3"
-        roofs = attributes[id]["roofs"]
-        total_roof_area = 0
-
-        for roof in roofs:
-            total_roof_area += roof["area"]
 
         id_tag = ET.SubElement(building[0], f'{gen}:stringAttribute')
         area_tag = ET.SubElement(building[0], f'{gen}:doubleAttribute')

@@ -1,6 +1,7 @@
 Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMmNhMmE2NC1kMWMwLTQyMDMtYTJkNS04Y2MwZmU5ODJiMTciLCJpZCI6NzI2MjMsImlhdCI6MTYzNjIwMjExOX0.PnQgGga-vVnFyiWAoWVY1_ZO_mYSkIyylnq1L6XBXMM';
 
 var viewer = new Cesium.Viewer('cesiumContainer');
+
 var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
      url: "../model/tileset.json",
 }))

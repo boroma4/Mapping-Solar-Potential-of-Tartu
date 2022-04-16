@@ -37,6 +37,7 @@ def area(poly):
     result = np.dot(total, unit_normal(poly[0], poly[1], poly[2]))
     return abs(result / 2)
 
+
 def get_angles(normal):
     """Get the azimuth and altitude from the normal vector."""
     # -- Convert from polar system to azimuth

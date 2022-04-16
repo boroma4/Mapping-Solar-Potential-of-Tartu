@@ -8,10 +8,8 @@ https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html
 
 https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-information-system/getting-started-pvgis/api-non-interactive-service_en
 
-### Running
+## Project structure
 
-`pip install virtualenv`
-
-`virtualenv venv && source venv/bin/activate && pip install -r requirements.txt`
-
-`python3 run.py`
+* **cesium-prototype-js** - temporary web app to view the results
+* **preprocessor** - computes useful roof attributes from CityGML data
+* **server** - API that does estimations of solar potential for buldings based on precomputed data and PVGIS API
