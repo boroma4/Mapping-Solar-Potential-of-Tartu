@@ -6,11 +6,8 @@ import time
 
 from lib.util.path import PathUtil
 from lib.util.surface import Surface
-
-CORE = "{http://www.opengis.net/citygml/2.0}"
-GML = "{http://www.opengis.net/gml}"
-GEN = "{http://www.opengis.net/citygml/generics/2.0}"
-ID = "{http://www.opengis.net/gml}id"
+from lib.building import Building
+from lib.xml_constants import *
 
 UPDATED_PREFIX = "updated-"
 
@@ -43,8 +40,10 @@ class Preprocessor():
                 new_file_path = os.path.join(
                     data_dir_path, f"{UPDATED_PREFIX}{filename}")
 
+                logging.info("Updating XML tree")
                 tree.write(new_file_path)
 
+                logging.info("Wrtiting to JSON")
                 json_name = filename.replace(".gml", "")
 
                 with open(path_util.get_path_json(json_name), 'w') as fp:
@@ -60,14 +59,16 @@ class Preprocessor():
     def __process_buildings(self, buildings, attribute_map):
         count_total = 0
         count_no_roofs = 0
+        count_no_location = 0
 
-        for building in buildings:
-            id = building[0].attrib[ID]
+        for xml_building in buildings:
+            id = xml_building[0].attrib[ID]
+            building = Building(id, xml_building)
             attribute_map[id] = attribute_map.get(id, {})
-            _, z_min = self.__get_z_range(building)
+            z_min = building.get_z_min()
 
             # https://epsg.io/3301, unit - meters
-            for points in building.iter(f"{GML}posList"):
+            for points in building.get_surface_points():
                 surface = Surface(points.text)
 
                 if surface.is_roof(z_min):
@@ -84,31 +85,38 @@ class Preprocessor():
                     if roof_attribs not in attribute_map[id]["roofs"]:
                         attribute_map[id]["roofs"].append(roof_attribs)
 
-            count_total += 1
-
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
                 attribute_map[id]["roofs"] = [
                     {"area": 0, "azimuth": 0, "tilt": 0}]
-            
-            # total roof area
-            roofs = attribute_map[id]["roofs"]
-            total_roof_area = 0
 
-            for roof in roofs:
-                total_roof_area += roof["area"]
+            total_roof_area = sum([roof["area"]
+                                  for roof in attribute_map[id]["roofs"]])
+            lat, lon = 0, 0
+
+            try:
+                lat, lon = building.get_lat_lon()
+            except BaseException:
+                # TODO: take random surface point
+                count_no_location += 1
 
             attribute_map[id]["total_roof_area"] = total_roof_area
-            self.__update_tree(building, total_roof_area, id)
+            attribute_map[id]["lat"] = lat
+            attribute_map[id]["lon"] = lon
+
+            self.__update_tree(xml_building, total_roof_area, id)
+            count_total += 1
 
         logging.info(
             f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
+        logging.info(
+            f"No location specified for {count_no_location}/{count_total} buildings")
 
-    def __update_tree(self, building, total_roof_area, id):
+    def __update_tree(self, xml_building, total_roof_area, id):
         gen = "ns3"
 
-        id_tag = ET.SubElement(building[0], f'{gen}:stringAttribute')
-        area_tag = ET.SubElement(building[0], f'{gen}:doubleAttribute')
+        id_tag = ET.SubElement(xml_building[0], f'{gen}:stringAttribute')
+        area_tag = ET.SubElement(xml_building[0], f'{gen}:doubleAttribute')
 
         id_tag.attrib["name"] = "str_id"
         area_tag.attrib["name"] = "area"
@@ -118,14 +126,3 @@ class Preprocessor():
 
         id_tag_value.text = id
         area_tag_value.text = f'{total_roof_area}'
-
-    def __get_z_range(self, building):
-        maximum, minimum = 0, 0
-
-        for attribute in building.iter(f"{GEN}doubleAttribute"):
-            if attribute.attrib["name"] == "z_max":
-                maximum = float(attribute[0].text)
-            if attribute.attrib["name"] == "z_min":
-                minimum = float(attribute[0].text)
-
-        return maximum, minimum

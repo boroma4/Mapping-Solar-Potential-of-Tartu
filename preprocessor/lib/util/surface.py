@@ -8,7 +8,6 @@ class Surface:
         self.__add_points(points_str)
 
     def __add_points(self, points_str: str) -> None:
-
         floats = [float(e) for e in points_str.split(" ")]
         divisions = len(floats) // 3
         for i in range(divisions):

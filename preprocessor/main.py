@@ -39,5 +39,5 @@ if __name__ == "__main__":
     data_path = args.datapath
 
     preprocessor = Preprocessor(data_path)
-    preprocessor.process(Level.LOD1)
+    # preprocessor.process(Level.LOD1)
     preprocessor.process(Level.LOD2)
