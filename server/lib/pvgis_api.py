@@ -10,7 +10,7 @@ MANDATORY_FIELDS = [
     "lon",
     "peak_power",
     "optimal_angles"
-    ]
+]
 
 
 class PvgisRequest:
@@ -79,8 +79,8 @@ class PvgisRequest:
             "peakpower": float(self.peak_power),
             "loss": float(self.loss),
             "mountingplace": self.mounting_place,
-            #"angle": float(getattr(self, "angle")),
-            #"aspect": float(getattr(self, "azimuth")),
+            # "angle": float(getattr(self, "angle")),
+            # "aspect": float(getattr(self, "azimuth")),
             "outputformat": self.output_format,
             "raddatabase": self.db,
             "optimalangles": int(self.optimal_angles)

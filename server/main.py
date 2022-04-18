@@ -1,34 +1,7 @@
 from lib.pvgis_api import PvgisRequest
 from lib.solar import calculate_peak_power_kpw, calculate_usable_area
 from flask import Flask, request
-
-import logging
-import os
-import datetime
-import json
-
-# JSON for now
-def load_building_db():
-    with open("./data/lod2/tartu.json") as f:
-        return json.load(f)
-
-
-def configure_logger():
-    dir_name = "logs"
-
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
-
-    logs_path = os.path.join(dir_name, str(datetime.now()))
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler(logs_path),
-            logging.StreamHandler()
-        ]
-    )
+from init import load_building_db, configure_logger
 
 
 app = Flask(__name__)
@@ -43,7 +16,7 @@ def hello():
 @app.route('/solar', methods=["GET"])
 def solar():
     args = request.args
-    building_id = args.get("id")
+    building_id = args.get("etak_id")
 
     if not building_id or building_id not in data:
         return "Invalid building ID specified", 400
@@ -69,7 +42,7 @@ def solar():
         .send()
 
     # merge dictionaries
-    return {"pv" : pv_calculations} | {"building": building_data}
+    return {"pv": pv_calculations} | {"building": building_data}
 
 
 if __name__ == "__main__":

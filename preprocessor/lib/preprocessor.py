@@ -57,12 +57,12 @@ class Preprocessor():
                 logging.info(f'Ignoring file: {file_path}\n')
 
     def __process_buildings(self, buildings, attribute_map):
-        count_total = 0
+        count_total = len(buildings)
         count_no_roofs = 0
         count_no_location = 0
 
         for xml_building in buildings:
-            id = xml_building[0].attrib[ID]
+            id = self.__extract_id(xml_building[0].attrib[ID])
             building = Building(id, xml_building)
             attribute_map[id] = attribute_map.get(id, {})
             z_min = building.get_z_min()
@@ -76,22 +76,18 @@ class Preprocessor():
                     azimuth, tilt = surface.angles()
 
                     # For writing to separate JSON
-                    attribute_map[id]["roofs"] = attribute_map[id].get(
-                        "roofs", [])
+                    attribute_map[id]["roofs"] = attribute_map[id].get("roofs", [])
 
-                    roof_attribs = {
-                        "area": area, "azimuth": azimuth, "tilt": tilt}
+                    roof_attribs = {"area": area, "azimuth": azimuth, "tilt": tilt}
 
                     if roof_attribs not in attribute_map[id]["roofs"]:
                         attribute_map[id]["roofs"].append(roof_attribs)
 
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
-                attribute_map[id]["roofs"] = [
-                    {"area": 0, "azimuth": 0, "tilt": 0}]
+                attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
 
-            total_roof_area = sum([roof["area"]
-                                  for roof in attribute_map[id]["roofs"]])
+            total_roof_area = sum([roof["area"] for roof in attribute_map[id]["roofs"]])
             lat, lon = 0, 0
 
             try:
@@ -105,7 +101,6 @@ class Preprocessor():
             attribute_map[id]["lon"] = lon
 
             self.__update_tree(xml_building, total_roof_area, id)
-            count_total += 1
 
         logging.info(
             f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
@@ -126,3 +121,7 @@ class Preprocessor():
 
         id_tag_value.text = id
         area_tag_value.text = f'{total_roof_area}'
+
+    def __extract_id(self, string_id):
+        subparts = string_id.split("_")
+        return subparts[1]
