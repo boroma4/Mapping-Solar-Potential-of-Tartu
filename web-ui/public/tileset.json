@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "properties": {
+    "tyyp": {
+      "minimum": 10,
+      "maximum": 20
+    },
+    "z_min": {
+      "minimum": 37.3,
+      "maximum": 57.75
+    },
+    "z_max": {
+      "minimum": 44.81,
+      "maximum": 60.69
+    }
+  },
+  "geometricError": 99,
+  "root": {
+    "refine": "ADD",
+    "boundingVolume": {
+      "region": [
+        0.4646341746901998,
+        1.0179867108588911,
+        0.46537265084046114,
+        1.020304106167949,
+        -8517.456875806945,
+        8631.25250830937
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "full.b3dm"
+    }
+  }
+}

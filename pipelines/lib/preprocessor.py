@@ -5,7 +5,7 @@ import logging
 import time
 
 from lib.util.path import PathUtil
-from lib.util.surface import Surface
+from lib.surface import Surface
 from lib.building import Building
 from lib.xml_constants import *
 
@@ -17,11 +17,14 @@ class Preprocessor():
     def __init__(self, data_path) -> None:
         self.data_path = data_path
 
-    def process(self, level):
+    def process(self, level, debug_filename):
         path_util = PathUtil(self.data_path, level)
         data_dir_path = path_util.get_data_dir_path()
 
         for filename in os.listdir(data_dir_path):
+            if debug_filename and filename != debug_filename:
+                continue
+
             file_path = os.path.join(data_dir_path, filename)
             is_valid_prefix_and_suffix = file_path.endswith(
                 ".gml") and not filename.startswith(UPDATED_PREFIX)
@@ -48,6 +51,14 @@ class Preprocessor():
 
                 with open(path_util.get_path_json(json_name), 'w') as fp:
                     json.dump(attribute_map, fp)
+
+                logging.info("Converting CityGML to 3D tiles")
+
+                tiles_dir_path = file_path.removesuffix(".gml")
+                if not os.path.exists(tiles_dir_path):
+                    os.mkdir(tiles_dir_path)
+
+                os.system(f"NODE_OPTIONS=--max-old-space-size=10000 citygml-to-3dtiles {file_path} {tiles_dir_path}/")
 
                 end_time = time.time()
                 duration = round(end_time - start_time, 3)

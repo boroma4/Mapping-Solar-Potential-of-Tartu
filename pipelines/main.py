@@ -40,4 +40,4 @@ if __name__ == "__main__":
 
     preprocessor = Preprocessor(data_path)
     # preprocessor.process(Level.LOD1)
-    preprocessor.process(Level.LOD2)
+    preprocessor.process(Level.LOD2, "tartu.gml")
