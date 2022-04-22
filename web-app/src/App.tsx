@@ -1,5 +1,4 @@
 import { Viewer, Cesium3DTileset } from "resium";
-import { IonResource } from "cesium";
 
 function App() {
   let viewer: Viewer; // This will be raw Cesium's Viewer object.
