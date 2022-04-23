@@ -10,7 +10,11 @@ https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-infor
 
 ## Tech stack 
 * Python 3
-* Node.js
+* Node.js 
 * React
 * Cesium
 * Vite
+
+## Requirements
+* Python 3.9+
+* Node.js 14.8+

@@ -34,6 +34,11 @@ def configure_parser():
         help="efficiency of the PV system, defaults to 0.20",
         type=float,
         default=0.20)
+    parser.add_argument(
+        "--pv-loss",
+        help="losses in cables, power inverters, dirt, etc. defaults to 0.14",
+        type=float,
+        default=0.14)
 
     return parser
 
@@ -48,6 +53,7 @@ if __name__ == "__main__":
     specific_file_name = args.filename
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
+    pv_loss = args.pv_loss
 
     if pipeline_type not in ["solar", "tiles"]:
         raise Exception("Wrong pipeline type")
@@ -57,6 +63,6 @@ if __name__ == "__main__":
     lod = Level.LOD1 if lod_num == 1 else Level.LOD2
 
     if pipeline_type == "solar":
-        SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency)
+        SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss)
     else:
         TilesPipeline(data_path, specific_file_name).run(lod)

@@ -13,16 +13,17 @@ from lib.util.file_size import get_file_size_mb
 
 
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level, pv_efficiency):
+    def run(self, level, pv_efficiency, pv_loss):
         logging.info("Running Solar Potential pipeline")
         self.pv_efficiency = pv_efficiency
+        self.pv_loss = pv_loss
         self.process_files(level, self.process)
 
     def process(self, tree, path_util, filename):
         self.path_util = path_util
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
-        self.__add_solar_potential_to_attribute_map(attribute_map)
+        attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
 
         logging.info("Wrtiting results to JSON")
         json_name = filename.replace(".gml", "")
@@ -99,6 +100,7 @@ class SolarPotentialPipeline(Pipeline):
                 .set_location(lon, lat) \
                 .set_peak_power_kwp(peak_power_kpw) \
                 .set_mounting_place("building") \
+                .set_loss(self.pv_loss) \
                 .optimize_angles() \
                 .get_payload()
 
@@ -117,6 +119,14 @@ class SolarPotentialPipeline(Pipeline):
         responses_json_path = tmp_dir_path + "/responses.json"
         json_file_size_mb = get_file_size_mb(responses_json_path)
         logging.info(f"Responses JSON is {json_file_size_mb} MB")
+
+        with open(responses_json_path, 'r') as fp:
+            pv_data = json.loads(fp.read())
+        
+        for id in attribute_map.keys():
+            attribute_map[id] = {"building": attribute_map[id], "pv": pv_data[id]}
+        
+        return attribute_map
 
     @timed("Sending requests to PVGIS from Node.js")
     def __send_pvgis_api_requests(self):

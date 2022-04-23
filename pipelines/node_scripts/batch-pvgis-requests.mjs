@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync } from "fs";
 import fetch from "node-fetch";
 
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
+const BATCH_LIMIT = 30;
+const RATE_LIMIT_COOLDOWN_MS = 1000;
 const args = process.argv.slice(2);
 
 const sleep = async (ms) => {
@@ -26,15 +28,14 @@ const getRequest = async (id, url) => {
 }
 
 const processRequests = async (requestPayloads) => {
-    const batchLimit = 30;
     const promises = [];
     let batch = [];
 
     let batchesDone = 0;
     const countTotal = Object.keys(requestPayloads).length;
-    const numBatches = Math.floor(countTotal / batchLimit);
+    const numBatches = Math.floor(countTotal / BATCH_LIMIT);
 
-    console.log("Sending requests to PVGIS API in batches")
+    console.log("Sending requests to PVGIS API in batches, batch size: " + BATCH_LIMIT)
     
     for (const id of Object.keys(requestPayloads)) {
         const payload = requestPayloads[id];
@@ -43,7 +44,7 @@ const processRequests = async (requestPayloads) => {
         const requestPromise = getRequest(id, requestUrl);
         batch.push(requestPromise);
     
-        if (batch.length >= batchLimit) {
+        if (batch.length >= BATCH_LIMIT) {
             batch.forEach((promise) => promises.push(promise));
             batch = [];
             batchesDone++;
@@ -52,7 +53,7 @@ const processRequests = async (requestPayloads) => {
                 console.log(`${batchesDone}/${numBatches} batches done`);
             }
             // to avoid rate-limiting
-            await sleep(1000);
+            await sleep(RATE_LIMIT_COOLDOWN_MS);
         }
     };
     
