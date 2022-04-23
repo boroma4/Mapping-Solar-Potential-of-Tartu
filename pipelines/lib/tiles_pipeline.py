@@ -1,8 +1,9 @@
 import os
 import xml.etree.ElementTree as ET
 import logging
+import pathlib
 
-from lib.xml_constants import *
+from lib.util.xml_constants import *
 from lib.pipeline import Pipeline, UPDATED_PREFIX
 
 
@@ -24,11 +25,12 @@ class TilesPipeline(Pipeline):
 
         logging.info("Converting CityGML to 3D tiles")
 
-        tiles_dir_path = processed_file_path.removesuffix(".gml")
+        tiles_dir_path = processed_file_path.removesuffix(".gml") + "-3dtiles"
         if not os.path.exists(tiles_dir_path):
             os.mkdir(tiles_dir_path)
-
-        os.system(f"NODE_OPTIONS=--max-old-space-size=10000 citygml-to-3dtiles {processed_file_path} {tiles_dir_path}/")
+        
+        js_script_path = path_util.get_js_script('convert.mjs')
+        os.system(f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {tiles_dir_path}/")
 
     def __process_buildings(self, buildings):
         count_total = len(buildings)

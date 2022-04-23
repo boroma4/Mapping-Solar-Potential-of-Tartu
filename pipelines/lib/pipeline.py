@@ -4,7 +4,7 @@ import logging
 import time
 
 from lib.util.path import PathUtil
-from lib.xml_constants import *
+from lib.util.xml_constants import *
 
 UPDATED_PREFIX = "updated-"
 

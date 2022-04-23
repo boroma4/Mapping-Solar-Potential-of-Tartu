@@ -1,5 +1,7 @@
-from argparse import ArgumentError
 import os
+import glob
+
+from argparse import ArgumentError
 from lib.util.lod import Level
 
 DATA_PATH = "data"
@@ -23,3 +25,7 @@ class PathUtil:
 
     def get_path_json(self, id):
         return os.path.join(self.get_data_dir_path(), f'{id}.json')
+    
+    def get_js_script(self, name):
+        return glob.glob(f"./**/node_scripts/{name}", recursive=True)[0]
+

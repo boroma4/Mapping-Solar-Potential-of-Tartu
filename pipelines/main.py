@@ -29,7 +29,7 @@ def configure_parser():
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
     parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
-
+    parser.add_argument("--pv-efficiency", help="efficiency of the PV system, defaults to 0.20", type=float, default=0.20)
 
     return parser
 
@@ -43,6 +43,7 @@ if __name__ == "__main__":
     data_path = args.datapath
     specific_file_name = args.filename
     lod_num = args.lod
+    pv_efficiency = args.pv_efficiency
 
     if pipeline_type not in ["solar", "tiles"]:
         raise Exception("Wrong pipeline type")
@@ -52,6 +53,6 @@ if __name__ == "__main__":
     lod = Level.LOD1 if lod_num == 1 else Level.LOD2
 
     if pipeline_type == "solar":
-        SolarPotentialPipeline(data_path).run(lod)
+        SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency)
     else:
-        TilesPipeline(data_path).run(lod)
+        TilesPipeline(data_path, specific_file_name).run(lod)

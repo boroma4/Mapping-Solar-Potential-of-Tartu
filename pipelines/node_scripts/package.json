@@ -1,0 +1,10 @@
+{
+  "name": "nodejs-utils",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Bohdan Romashchenko",
+  "dependencies": {
+    "citygml-to-3dtiles": "github:boroma4/citygml-to-3dtiles",
+    "node-fetch": "^3.2.3"
+  }
+}
