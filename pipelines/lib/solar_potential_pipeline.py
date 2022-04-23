@@ -8,7 +8,7 @@ from lib.util.xml_constants import *
 from lib.pipeline import Pipeline
 from lib.solar_potential.formulas import calculate_peak_power_kpw, calculate_usable_area
 from lib.solar_potential.pvgis_request_builder import PvgisRequestBuilder
-from lib.util.timed import timed
+from lib.util.decorators import timed
 from lib.util.file_size import get_file_size_mb
 
 
