@@ -1,6 +1,7 @@
 from lib.util.xml_constants import *
 from pyproj import Proj, transform
 
+
 class Building:
     def __init__(self, id, xml_building):
         self.id = id
@@ -15,7 +16,7 @@ class Building:
                 return float(attribute[0].text)
 
         return 0
-    
+
     def get_approx_lat_lon(self):
         first_surface_str = list(self.get_surface_points())[0].text
         x, y = list(map(float, first_surface_str.split(" ")[:2]))

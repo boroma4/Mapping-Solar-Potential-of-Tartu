@@ -28,9 +28,11 @@ class TilesPipeline(Pipeline):
         tiles_dir_path = processed_file_path.removesuffix(".gml") + "-3dtiles"
         if not os.path.exists(tiles_dir_path):
             os.mkdir(tiles_dir_path)
-        
+
+        logging.info("Running convert.mjs")
         js_script_path = path_util.get_js_script('convert.mjs')
-        os.system(f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {tiles_dir_path}/")
+        os.system(
+            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {tiles_dir_path}/")
 
     def __process_buildings(self, buildings):
         count_total = len(buildings)

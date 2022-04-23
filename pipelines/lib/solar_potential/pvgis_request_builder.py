@@ -1,6 +1,3 @@
-import logging
-import grequests
-
 BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc"
 MANDATORY_FIELDS = [
     "db",
@@ -13,7 +10,7 @@ MANDATORY_FIELDS = [
 ]
 
 
-class PvgisRequest:
+class PvgisRequestBuilder:
     def __init__(self) -> None:
         self.db = "PVGIS-SARAH2"
         self.mounting_place = "building"
@@ -55,11 +52,9 @@ class PvgisRequest:
         self.optimal_angles = True
         return self
 
-    def send_async(self):
+    def get_payload(self):
         self.validate_fields()
-        payload = self.__build_payload()
-        return grequests.get(BASE_PVCALC_URL, params=payload, timeout=10)
-
+        return self.__build_payload()
 
     def validate_fields(self):
         for field in MANDATORY_FIELDS:

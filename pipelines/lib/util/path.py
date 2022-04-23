@@ -25,7 +25,13 @@ class PathUtil:
 
     def get_path_json(self, id):
         return os.path.join(self.get_data_dir_path(), f'{id}.json')
-    
+
     def get_js_script(self, name):
         return glob.glob(f"./**/node_scripts/{name}", recursive=True)[0]
 
+    def get_tmp_dir_path(self):
+        path = os.path.join(DATA_PATH, "tmp")
+        if not os.path.isdir(path):
+            os.mkdir(path)
+
+        return path

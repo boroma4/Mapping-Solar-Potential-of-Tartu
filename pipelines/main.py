@@ -29,7 +29,11 @@ def configure_parser():
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
     parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
-    parser.add_argument("--pv-efficiency", help="efficiency of the PV system, defaults to 0.20", type=float, default=0.20)
+    parser.add_argument(
+        "--pv-efficiency",
+        help="efficiency of the PV system, defaults to 0.20",
+        type=float,
+        default=0.20)
 
     return parser
 
