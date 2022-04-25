@@ -21,10 +21,14 @@ class PathUtil:
             raise ArgumentError("Invalid LOD")
 
     def get_path_gml(self, id):
-        return os.path.join(self.get_data_dir_path(), f'{id}.gml')
+        if not id.endswith(".gml"):
+            id += ".gml"
+        return os.path.join(self.get_data_dir_path(), id)
 
     def get_path_json(self, id):
-        return os.path.join(self.get_data_dir_path(), f'{id}.json')
+        if not id.endswith(".json"):
+            id += ".json"
+        return os.path.join(self.get_data_dir_path(), id)
 
     def get_js_script(self, name):
         return glob.glob(f"./**/node_scripts/{name}", recursive=True)[0]

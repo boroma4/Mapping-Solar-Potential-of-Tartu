@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "cesium": "^1.92.0",
+    "chart.js": "^3.7.1",
     "react": "^18.0.0",
+    "react-chartjs-2": "^4.1.0",
     "react-dom": "^18.0.0",
     "resium": "^1.14.3"
   },

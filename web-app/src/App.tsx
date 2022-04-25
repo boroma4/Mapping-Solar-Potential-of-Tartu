@@ -1,22 +1,13 @@
-import { Viewer, Cesium3DTileset } from "resium";
+import Dashboard from "./Dashboard";
+import Map from "./Map";
+import "./App.css";
 
 function App() {
-  let viewer: Viewer; // This will be raw Cesium's Viewer object.
-
-  const handleReady = tileset => {
-    if (viewer) {
-      viewer.zoomTo(tileset);
-    }
-  };
-
   return (
-    <Viewer
-      full
-      ref={e => {
-        viewer = e && e.cesiumElement;
-      }}>
-      <Cesium3DTileset url={"/tileset.json"} onReady={handleReady} />
-    </Viewer>
+    <div className="main-container">
+      <Map/>
+      <Dashboard/>
+    </div>
   );
 }
 

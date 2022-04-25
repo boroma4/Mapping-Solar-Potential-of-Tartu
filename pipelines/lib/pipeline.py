@@ -18,16 +18,14 @@ class Pipeline:
         path_util = PathUtil(self.data_path, level)
         data_dir_path = path_util.get_data_dir_path()
 
-        for filename in os.listdir(data_dir_path):
-            # For running on only one file
-            if self.single_file_name and self.single_file_name != filename:
-                continue
-
+        for filename in os.listdir(data_dir_path):    
+            is_allowed_filename = not self.single_file_name or self.single_file_name == filename
             original_file_path = os.path.join(data_dir_path, filename)
+            is_file = os.path.isfile(original_file_path)
             is_valid_prefix_and_suffix = original_file_path.endswith(
                 ".gml") and not filename.startswith(UPDATED_PREFIX)
 
-            if os.path.isfile(original_file_path) and is_valid_prefix_and_suffix:
+            if is_file and is_valid_prefix_and_suffix and is_allowed_filename:
                 logging.info(f'Processing {filename}, level: {level}')
                 start_time = time.time()
 

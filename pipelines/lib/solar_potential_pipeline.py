@@ -1,11 +1,12 @@
 import json
 import logging
 import os
+import xml.etree.ElementTree as ET
 
 from lib.citygml.surface import Surface
 from lib.citygml.building import Building
 from lib.util.xml_constants import *
-from lib.pipeline import Pipeline
+from lib.pipeline import Pipeline, UPDATED_PREFIX
 from lib.solar_potential.formulas import calculate_peak_power_kpw, calculate_usable_area
 from lib.solar_potential.pvgis_request_builder import PvgisRequestBuilder
 from lib.util.decorators import timed
@@ -24,10 +25,28 @@ class SolarPotentialPipeline(Pipeline):
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
         attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
+        self.__write_solar_output_to_tree(buildings, attribute_map)
 
+        original_file_path = path_util.get_path_gml(filename)
+        processed_file_path = path_util.get_path_gml(f"{UPDATED_PREFIX}{filename}")
+
+        logging.info("Updating XML tree")
+        tree.write(processed_file_path)
+
+        logging.info("Converting CityGML to 3D tiles")
+
+        output_dir_path = original_file_path.removesuffix(".gml") + "-output"
+        if not os.path.exists(output_dir_path):
+            os.mkdir(output_dir_path)
+
+        logging.info("Running convert.mjs")
+        js_script_path = path_util.get_js_script('convert.mjs')
+        os.system(
+            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {output_dir_path}/")
+        
         logging.info("Wrtiting results to JSON")
-        json_name = filename.replace(".gml", "")
-        json_path = path_util.get_path_json(json_name)
+        json_name = "fullpv.json"
+        json_path = os.path.join(output_dir_path, json_name)
 
         with open(json_path, 'w') as fp:
             json.dump(attribute_map, fp)
@@ -66,14 +85,16 @@ class SolarPotentialPipeline(Pipeline):
 
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
-                attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
+                attribute_map.pop(id)
+            else:
+                total_roof_area = sum([roof["area"] for roof in attribute_map[id]["roofs"]])
+                lat, lon = building.get_approx_lat_lon()
 
-            total_roof_area = sum([roof["area"] for roof in attribute_map[id]["roofs"]])
-            lat, lon = building.get_approx_lat_lon()
+                attribute_map[id]["total_roof_area"] = round(total_roof_area, 2)
+                attribute_map[id]["lat"] = lat
+                attribute_map[id]["lon"] = lon
+                self.__update_tree(xml_building, [["area", "doubleAttribute", total_roof_area], ["etak_id", "stringAttribute", id]])
 
-            attribute_map[id]["total_roof_area"] = total_roof_area
-            attribute_map[id]["lat"] = lat
-            attribute_map[id]["lon"] = lon
 
             count_processed += 1
             if count_processed % 5000 == 0:
@@ -127,6 +148,16 @@ class SolarPotentialPipeline(Pipeline):
             attribute_map[id] = {"building": attribute_map[id], "pv": pv_data[id]}
         
         return attribute_map
+    
+
+    @timed("Updating the XML tree with solar data")
+    def __write_solar_output_to_tree(self, buildings, attribute_map):
+        for xml_building in buildings:
+            id = self.extract_id(xml_building[0].attrib[ID])
+            # Potentially no roofs were detected so checking if ID exists
+            if id in attribute_map:
+                self.__update_tree(xml_building, [["power", "doubleAttribute", attribute_map[id]["pv"]["totals"]["fixed"]["E_y"]]])
+
 
     @timed("Sending requests to PVGIS from Node.js")
     def __send_pvgis_api_requests(self):
@@ -134,3 +165,13 @@ class SolarPotentialPipeline(Pipeline):
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         os.system(f"node {js_script_path} {tmp_dir_path}")
+    
+
+    def __update_tree(self, xml_building, attribs):
+        gen = "ns3"
+
+        for name, type, value in attribs:
+            xml_tag = ET.SubElement(xml_building[0], f'{gen}:{type}')
+            xml_tag.attrib["name"] = name
+            xml_value = ET.SubElement(xml_tag, f'{gen}:value')
+            xml_value.text = str(value)

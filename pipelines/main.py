@@ -1,7 +1,5 @@
 from lib.solar_potential_pipeline import SolarPotentialPipeline
-from lib.tiles_pipeline import TilesPipeline
 from lib.util.lod import Level
-from datetime import datetime
 
 import argparse
 import logging
@@ -64,5 +62,3 @@ if __name__ == "__main__":
 
     if pipeline_type == "solar":
         SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss)
-    else:
-        TilesPipeline(data_path, specific_file_name).run(lod)

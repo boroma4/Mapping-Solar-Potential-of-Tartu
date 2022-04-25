@@ -17,7 +17,7 @@ const getRequest = async (id, url) => {
         try {
             const response = await requestPromise;
             const result = await response.json();
-            resolve([id, result]);
+            resolve([id, result["outputs"]]);
         }
         catch(e) {
             reject(e.message);
