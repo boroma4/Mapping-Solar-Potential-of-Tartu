@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 const BATCH_LIMIT = 30;
-const RATE_LIMIT_COOLDOWN_MS = 1050;
+const RATE_LIMIT_COOLDOWN_MS = 2000;
 const args = process.argv.slice(2);
 
 const sleep = async (ms) => {
@@ -16,10 +16,17 @@ const getRequest = async (id, url) => {
     return new Promise(async (resolve, reject) => {
         try {
             const response = await requestPromise;
-            const result = await response.json();
+            let result;
+            try{
+                result = await response.json();
+            } catch(e) {
+                console.log(response.text);
+                throw e;
+            }
             resolve([id, result["outputs"]]);
         }
         catch(e) {
+            console.log(e);
             reject(e.message);
         }
     });

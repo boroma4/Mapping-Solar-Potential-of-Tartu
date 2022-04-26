@@ -1,6 +1,7 @@
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { CityPvInput } from '../types/PipepileInput';
+import { adjustPowerUnits } from '../utils/AdjustUnits';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -10,7 +11,7 @@ interface Props {
 
 function MonthlyPieChart ({ pvData }: Props) {
     const labels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const colors = [ "#b30000", "#7c1158", "#4421af", "#808000", "#0d88e6", "#00b7c7", "#D73B3E", "#8be04e", "#ebdc78","#FF9966","#D2691E", "#FFC0CB"];
+    const colors = [ "#0000D1", "#000075", "#8AFF8A", "#00FF00", "#007500", "#FFFF00", "#FFA500", "#FF281B", "#6E612F","#8A6E64","#D1CEC5","#5C5CFF"];
 
     const monthlyData =  {
             labels: labels,
@@ -22,7 +23,10 @@ function MonthlyPieChart ({ pvData }: Props) {
     };
 
     return(
+      <div >
+        <h4>Power produced by month (kWh): </h4>
         <Pie id='pie-char-1' data={monthlyData}/>
+      </div>
     );
 }
 

@@ -27,6 +27,7 @@ class SolarPotentialPipeline(Pipeline):
         attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
         self.__write_solar_output_to_tree(buildings, attribute_map)
         pv_output_map = self.__calculate_solar_stats(attribute_map)
+        pv_output_map["city"] = filename.removesuffix(".gml")
 
         original_file_path = path_util.get_path_gml(filename)
         processed_file_path = path_util.get_path_gml(f"{UPDATED_PREFIX}{filename}")
@@ -42,8 +43,11 @@ class SolarPotentialPipeline(Pipeline):
 
         logging.info("Running convert.mjs")
         js_script_path = path_util.get_js_script('convert.mjs')
-        os.system(
-            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {output_dir_path}/")
+        if os.system(
+            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {output_dir_path}/") != 0:
+
+            raise Exception(f"{js_script_path} failed!")
+
         
         logging.info("Wrtiting results to JSON")
         json_name = "city-attributes.json"
@@ -186,7 +190,8 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Running batch-pvgis-requests.mjs")
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
-        os.system(f"node {js_script_path} {tmp_dir_path}")
+        if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
+            raise Exception(f"{js_script_path} failed!")
     
 
     def __update_tree(self, xml_building, attribs):

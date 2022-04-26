@@ -3,6 +3,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import MonthlyPieChart from './MonthlyPieChars';
 import CityStats from './CityStats';
 import { CityPvInput } from '../types/PipepileInput';
+import BuildingColorLegend from './BuildingColorLegend';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -20,12 +21,13 @@ function Dashboard () {
             {
             !pvData  
             ? 
-                "loading" 
+                "Loading..."
             : 
-                <>
+                <div>
                     <CityStats pvData={pvData}/>
                     <MonthlyPieChart pvData={pvData}/>
-                </>
+                    <BuildingColorLegend/>
+                </div>
             }
         </div>
     );
