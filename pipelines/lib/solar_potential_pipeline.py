@@ -27,7 +27,6 @@ class SolarPotentialPipeline(Pipeline):
         attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
         self.__write_solar_output_to_tree(buildings, attribute_map)
         pv_output_map = self.__calculate_solar_stats(attribute_map)
-        pv_output_map["city"] = filename.removesuffix(".gml")
 
         original_file_path = path_util.get_path_gml(filename)
         processed_file_path = path_util.get_path_gml(f"{UPDATED_PREFIX}{filename}")
