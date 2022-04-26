@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 const BATCH_LIMIT = 30;
-const RATE_LIMIT_COOLDOWN_MS = 1000;
+const RATE_LIMIT_COOLDOWN_MS = 1050;
 const args = process.argv.slice(2);
 
 const sleep = async (ms) => {
@@ -31,7 +31,7 @@ const processRequests = async (requestPayloads) => {
 
     let batchesDone = 0;
     const countTotal = Object.keys(requestPayloads).length;
-    const numBatches = Math.floor(countTotal / BATCH_LIMIT);
+    const numBatches = Math.ceil(countTotal / BATCH_LIMIT);
 
     console.log("Sending requests to PVGIS API in batches, batch size: " + BATCH_LIMIT)
 
@@ -62,6 +62,7 @@ const processRequests = async (requestPayloads) => {
 }
 
 const writeOutput = (resultsList) => {
+    console.log("Writing output")
     const output = {};
     
     for (const result of resultsList) {
@@ -79,6 +80,7 @@ if (args.length != 1) {
 const tmpPath = args[0];
 const requestPayloads = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
 const promises = await processRequests(requestPayloads);
+console.log("Waiting for promises to resolve")
 const results = await Promise.all(promises);
 writeOutput(results);
 

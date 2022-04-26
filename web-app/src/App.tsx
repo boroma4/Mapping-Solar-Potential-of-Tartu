@@ -1,5 +1,5 @@
-import Dashboard from "./Dashboard";
-import Map from "./Map";
+import Dashboard from "./components/Dashboard";
+import Map from "./components/Map";
 import "./App.css";
 
 function App() {

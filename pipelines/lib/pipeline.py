@@ -2,6 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 import logging
 import time
+import datetime
 
 from lib.util.path import PathUtil
 from lib.util.xml_constants import *
@@ -34,9 +35,9 @@ class Pipeline:
                 processor(tree, path_util, filename)
 
                 end_time = time.time()
-                duration = round(end_time - start_time, 3)
+                duration_s = round(end_time - start_time, 3)
 
-                logging.info(f"Done. Took {duration}s")
+                logging.info(f"Done. Took {datetime.timedelta(seconds=duration_s)}")
             else:
                 logging.info(f'Ignoring file: {original_file_path}')
 
