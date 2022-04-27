@@ -4,6 +4,5 @@ import cesium from 'vite-plugin-cesium';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), cesium()],
-  base: "/Mapping-Solar-Potential-of-Tartu/"
+  plugins: [react(), cesium()]
 })

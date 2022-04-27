@@ -17,7 +17,7 @@ const getRequest = async (id, url) => {
         try {
             const response = await requestPromise;
             let result;
-            try{
+            try {
                 result = await response.json();
             } catch(e) {
                 console.log(response.text);
