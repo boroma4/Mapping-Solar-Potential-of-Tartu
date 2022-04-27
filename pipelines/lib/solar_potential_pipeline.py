@@ -14,10 +14,12 @@ from lib.util.file_size import get_file_size_mb
 
 
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level, pv_efficiency, pv_loss):
+    def run(self, level, pv_efficiency, pv_loss, optimize_2d):
         logging.info("Running Solar Potential pipeline")
         self.pv_efficiency = pv_efficiency
         self.pv_loss = pv_loss
+        self.optimize_2d = optimize_2d
+
         self.process_files(level, self.process)
 
     def process(self, tree, path_util, filename):
@@ -79,8 +81,15 @@ class SolarPotentialPipeline(Pipeline):
         for xml_building in buildings:
             id = self.extract_id(xml_building[0].attrib[ID])
             building = Building(id, xml_building)
+
+            if self.optimize_2d:
+                building.optimize_for_2d_map()
+                z_min = 0
+            else:
+                z_min = building.get_z_min()
+
+
             attribute_map[id] = attribute_map.get(id, {})
-            z_min = building.get_z_min()
 
             attribute_map[id]["roofs"] = []
             # https://epsg.io/3301, unit - meters

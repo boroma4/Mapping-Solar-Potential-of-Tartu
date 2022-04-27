@@ -23,3 +23,29 @@ class Building:
 
         # TODO: make dynamic based on the file
         return transform(Proj('EPSG:3301'), Proj('EPSG:4326'), x, y)
+
+    def optimize_for_2d_map(self):        
+        floor_z = self.__get_floor_z()
+
+        for xml_points in self.get_surface_points():
+            points = []
+            floats = [float(e) for e in xml_points.text.split(" ")]
+            divisions = len(floats) // 3
+
+            for i in range(divisions):
+                points.append(floats[i * 3: (i + 1) * 3])
+
+            normalized = [point[:2] + [point[2] - floor_z] for point in points]
+            stringified = [" ".join(map(str, coords)) for coords in normalized]
+            xml_points.text = " ".join(stringified)
+
+    def __get_floor_z(self):
+        points = []
+
+        for xml_points in self.get_surface_points():
+            floats = [float(e) for e in xml_points.text.split(" ")]
+            divisions = len(floats) // 3
+            for i in range(divisions):
+                points.append(floats[i * 3: (i + 1) * 3])
+        
+        return min(points, key=lambda x: x[2])[2]

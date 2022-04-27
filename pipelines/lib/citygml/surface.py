@@ -16,7 +16,7 @@ class Surface:
             if self.points and current_points == self.points[-1]:
                 continue
 
-            self.points.append((floats[i * 3: (i + 1) * 3]))
+            self.points.append(current_points)
 
     def is_roof(self, z_min) -> bool:
         _, tilt = self.angles()

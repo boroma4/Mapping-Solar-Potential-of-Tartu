@@ -20,10 +20,10 @@ function BuildingColorLegend () {
             {
                 Object.entries(yearlyPowerLegendKwh).map(([powerKwh, color]) => {
                 return(
-                    <>
+                    <div key={color}>
                         {`>= ${powerKwh} kWh`}
                         <ColoredLine color={color}/>
-                    </>
+                    </div>
                 )
             })
             }

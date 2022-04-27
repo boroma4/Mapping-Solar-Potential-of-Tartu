@@ -23,7 +23,6 @@ def configure_logger():
 
 def configure_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("pipeline", help="tiles or solar")
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
     parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
@@ -37,6 +36,7 @@ def configure_parser():
         help="losses in cables, power inverters, dirt, etc. defaults to 0.14",
         type=float,
         default=0.14)
+    parser.add_argument("--optimize-2d", help="optimize 3D tiles output for 2D map", type=bool, default=True)
 
     return parser
 
@@ -46,19 +46,16 @@ if __name__ == "__main__":
     parser = configure_parser()
     args = parser.parse_args()
 
-    pipeline_type = args.pipeline.lower()
     data_path = args.datapath
     specific_file_name = args.filename
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
     pv_loss = args.pv_loss
+    optimize_2d = args.optimize_2d
 
-    if pipeline_type not in ["solar", "tiles"]:
-        raise Exception("Wrong pipeline type")
     if lod_num not in [1, 2]:
         raise Exception("Unsupported LOD")
 
     lod = Level.LOD1 if lod_num == 1 else Level.LOD2
 
-    if pipeline_type == "solar":
-        SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss)
+    SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d)

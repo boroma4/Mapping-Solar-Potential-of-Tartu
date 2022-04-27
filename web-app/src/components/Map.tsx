@@ -1,5 +1,5 @@
-import { Viewer, Cesium3DTileset, CesiumComponentRef, Camera } from "resium";
-import { Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Cartesian3} from "cesium";
+import { Viewer, Cesium3DTileset, CesiumComponentRef } from "resium";
+import { Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle } from "cesium";
 import { useEffect, useRef } from "react";
 import { yearlyPowerLegendKwh } from "../utils/YearlyPowerLegend";
 
@@ -24,24 +24,26 @@ function Map() {
 
   
 
-    const handleReady = (tileset: Tileset)  => {
+    const handleReady = async (tileset: Tileset)  => {
       const conditions = createColorConditions();
       tileset.style = new Cesium3DTileStyle({
           color : {
               conditions
-          },
-          meta : {
-              description : '"Building id ${id} has height."'
           }
       });
       if (viewer) {
-          viewer.zoomTo(tileset);
+          await viewer.zoomTo(tileset);
+          viewer.camera.zoomIn(5000);
       }
     };
 
   return (
     <Viewer ref={ref} timeline={false} animation={false} className="left-container">
-      <Cesium3DTileset url={"/tileset.json"} onReady={handleReady} />
+      <Cesium3DTileset url={"/tileset.json"} 
+        onReady={handleReady} 
+        cullRequestsWhileMoving={false} 
+        cullWithChildrenBounds={false}
+        />
     </Viewer>
   );
 }
