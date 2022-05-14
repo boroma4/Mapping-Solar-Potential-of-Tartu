@@ -40,7 +40,3 @@ class Pipeline:
                 logging.info(f"Done. Took {datetime.timedelta(seconds=duration_s)}")
             else:
                 logging.info(f'Ignoring file: {original_file_path}')
-
-    def extract_id(self, string_id):
-        subparts = string_id.split("_")
-        return subparts[1]

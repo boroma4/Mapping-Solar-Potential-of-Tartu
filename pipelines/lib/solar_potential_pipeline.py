@@ -14,15 +14,16 @@ from lib.util.file_size import get_file_size_mb
 
 
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level, pv_efficiency, pv_loss, optimize_2d):
+    def run(self, level, pv_efficiency, pv_loss, optimize_2d, output_format):
         logging.info("Running Solar Potential pipeline")
         self.pv_efficiency = pv_efficiency
         self.pv_loss = pv_loss
         self.optimize_2d = optimize_2d
+        self.output_format = output_format
 
-        self.process_files(level, self.process)
+        self.process_files(level, self.process_city_gml_file)
 
-    def process(self, tree, path_util, filename):
+    def process_city_gml_file(self, tree, path_util, filename):
         self.path_util = path_util
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
@@ -36,50 +37,29 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Updating XML tree")
         tree.write(processed_file_path)
 
-        logging.info("Converting CityGML to 3D tiles")
-
         output_dir_path = original_file_path.removesuffix(".gml") + "-output"
         if not os.path.exists(output_dir_path):
             os.mkdir(output_dir_path)
-
-        logging.info("Running convert.mjs")
-        js_script_path = path_util.get_js_script('convert.mjs')
-        if os.system(
-            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_file_path} {output_dir_path}/") != 0:
-
-            raise Exception(f"{js_script_path} failed!")
-
         
-        logging.info("Wrtiting results to JSON")
-        json_name = "city-attributes.json"
-        json_path = os.path.join(output_dir_path, json_name)
+        logging.info("Wrtiting results to JSON files")
+        self.__write_city_attributes_json(attribute_map, output_dir_path)
+        self.__write_city_pv_json(pv_output_map, output_dir_path)
+        # Converting CityGML to visualizable format
+        self.__convert_citygml_to_output_format(processed_file_path, output_dir_path)
 
-        with open(json_path, 'w') as fp:
-            json.dump(attribute_map, fp)
-
-        json_file_size_mb = get_file_size_mb(json_path)
-        logging.info(f"City attributes JSON is {json_file_size_mb} MB")
-
-        json_name = "city-pv.json"
-        json_path = os.path.join(output_dir_path, json_name)
-
-        with open(json_path, 'w') as fp:
-            json.dump(pv_output_map, fp)
-
-        json_file_size_mb = get_file_size_mb(json_path)
-        logging.info(f"City PV stats JSON is {json_file_size_mb} MB")
 
     @timed("Building analysis")
     def __get_building_attributes(self, buildings):
         count_total = len(buildings)
         count_processed = 0
         count_no_roofs = 0
+        count_roofs = 0
         attribute_map = {}
 
         logging.info("Getting useful attributes of the buildings")
 
         for xml_building in buildings:
-            id = self.extract_id(xml_building[0].attrib[ID])
+            id = self.extract_integer_id(xml_building[0].attrib[ID])
             building = Building(id, xml_building)
 
             if self.optimize_2d:
@@ -88,15 +68,15 @@ class SolarPotentialPipeline(Pipeline):
             else:
                 z_min = building.get_z_min()
 
-
             attribute_map[id] = attribute_map.get(id, {})
-
             attribute_map[id]["roofs"] = []
+
             # https://epsg.io/3301, unit - meters
             for points in building.get_surface_points():
                 surface = Surface(points.text)
 
                 if surface.is_roof(z_min):
+                    count_roofs += 1
                     area = surface.area()
                     azimuth, tilt = surface.angles()
 
@@ -117,13 +97,13 @@ class SolarPotentialPipeline(Pipeline):
             attribute_map[id]["lon"] = lon
             self.__update_tree(xml_building, [["area", "doubleAttribute", total_roof_area], ["etak_id", "stringAttribute", id]])
 
-
             count_processed += 1
             if count_processed % 5000 == 0:
                 logging.info(f"Processed {count_processed}/{count_total} buildings")
 
         logging.info(
             f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
+        logging.info(f"{count_roofs} roofs detected")
 
         return attribute_map
 
@@ -189,7 +169,7 @@ class SolarPotentialPipeline(Pipeline):
     @timed("Updating the XML tree with solar data")
     def __write_solar_output_to_tree(self, buildings, attribute_map):
         for xml_building in buildings:
-            id = self.extract_id(xml_building[0].attrib[ID])
+            id = self.extract_integer_id(xml_building[0].attrib[ID])
             self.__update_tree(xml_building, [["power", "doubleAttribute", attribute_map[id]["pv"]["E_y"]]])
 
 
@@ -199,6 +179,43 @@ class SolarPotentialPipeline(Pipeline):
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
+            raise Exception(f"{js_script_path} failed!")
+
+
+    def __write_city_attributes_json(self, attribute_map, output_dir_path):
+        json_name = "city-attributes.json"
+        json_path = os.path.join(output_dir_path, json_name)
+
+        with open(json_path, 'w') as fp:
+            json.dump(attribute_map, fp)
+
+        json_file_size_mb = get_file_size_mb(json_path)
+        logging.info(f"City attributes JSON is {json_file_size_mb} MB")
+
+    
+    def __write_city_pv_json(self, pv_output_map, output_dir_path):
+        json_name = "city-pv.json"
+        json_path = os.path.join(output_dir_path, json_name)
+
+        with open(json_path, 'w') as fp:
+            json.dump(pv_output_map, fp)
+
+        json_file_size_mb = get_file_size_mb(json_path)
+        logging.info(f"City PV stats JSON is {json_file_size_mb} MB")
+    
+
+    def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path):
+        if self.output_format == "tiles":
+            self.__convert_to_3d_tiles(city_gml_file_path, output_dir_path)
+
+
+    def __convert_to_3d_tiles(self, processed_gml_path, output_dir_path):
+        logging.info("Converting CityGML to 3D tiles")
+        logging.info("Running convert.mjs")
+        js_script_path = self.path_util.get_js_script('convert.mjs')
+        if os.system(
+            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_gml_path} {output_dir_path}/") != 0:
+
             raise Exception(f"{js_script_path} failed!")
     
 
@@ -218,3 +235,8 @@ class SolarPotentialPipeline(Pipeline):
         output["total_monthly_energy_kwh_list"] = [round(sum([el["pv"]["E_m_exact"][i] for el in attribute_map.values()]), 3) for i in range(12)]
 
         return output
+
+
+    def extract_integer_id(self, string_id):
+        subparts = string_id.split("_")
+        return subparts[1]

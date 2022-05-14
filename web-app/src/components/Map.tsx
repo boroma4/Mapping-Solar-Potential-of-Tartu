@@ -22,8 +22,6 @@ function Map() {
       });
     }
 
-  
-
     const handleReady = async (tileset: Tileset)  => {
       const conditions = createColorConditions();
       tileset.style = new Cesium3DTileStyle({

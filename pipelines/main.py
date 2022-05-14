@@ -26,6 +26,7 @@ def configure_parser():
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
     parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
+    parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
     parser.add_argument(
         "--pv-efficiency",
         help="efficiency of the PV system, defaults to 0.20",
@@ -48,14 +49,16 @@ if __name__ == "__main__":
 
     data_path = args.datapath
     specific_file_name = args.filename
+    output_format = args.output_format
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
     pv_loss = args.pv_loss
     optimize_2d = args.optimize_2d
+
 
     if lod_num not in [1, 2]:
         raise Exception("Unsupported LOD")
 
     lod = Level.LOD1 if lod_num == 1 else Level.LOD2
 
-    SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d)
+    SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d, output_format)
