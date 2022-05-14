@@ -18,3 +18,7 @@ https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-infor
 ## Requirements
 * Python 3.9+
 * Node.js 14.8+
+
+## More information
+
+Please take a look at "docs" and "diagrams" directories to help you get started.
