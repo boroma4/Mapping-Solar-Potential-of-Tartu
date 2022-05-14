@@ -26,7 +26,6 @@ def configure_parser():
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
     parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
-    parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
     parser.add_argument(
         "--pv-efficiency",
         help="efficiency of the PV system, defaults to 0.20",
@@ -38,6 +37,8 @@ def configure_parser():
         type=float,
         default=0.14)
     parser.add_argument("--optimize-2d", help="optimize 3D tiles output for 2D map", type=bool, default=True)
+    parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
+
 
     return parser
 
@@ -49,11 +50,11 @@ if __name__ == "__main__":
 
     data_path = args.datapath
     specific_file_name = args.filename
-    output_format = args.output_format
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
     pv_loss = args.pv_loss
     optimize_2d = args.optimize_2d
+    output_format = args.output_format
 
 
     if lod_num not in [1, 2]:

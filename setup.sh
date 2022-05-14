@@ -2,7 +2,7 @@ echo "Installing python deps"
 pip install virtualenv
 virtualenv venv
 source venv/bin/activate
-pip install -r pipelines/requirements.txt
+pip install -r pipeline/requirements.txt
 pip install autopep8
 
 
