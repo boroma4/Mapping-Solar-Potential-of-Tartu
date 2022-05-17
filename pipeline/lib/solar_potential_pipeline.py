@@ -28,13 +28,13 @@ class SolarPotentialPipeline(Pipeline):
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
         attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
-        self.__write_solar_output_to_tree(buildings, attribute_map)
         pv_output_map = self.__calculate_solar_stats(attribute_map)
 
         original_file_path = path_util.get_path_gml(filename)
         processed_file_path = path_util.get_path_gml(f"{UPDATED_PREFIX}{filename}")
 
         logging.info("Updating XML tree")
+        self.__write_solar_output_to_tree(buildings, attribute_map)
         tree.write(processed_file_path)
 
         output_dir_path = original_file_path.removesuffix(".gml") + "-output"
@@ -44,6 +44,7 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Wrtiting results to JSON files")
         self.__write_city_attributes_json(attribute_map, output_dir_path)
         self.__write_city_pv_json(pv_output_map, output_dir_path)
+        
         # Converting CityGML to visualizable format
         self.__convert_citygml_to_output_format(processed_file_path, output_dir_path)
 

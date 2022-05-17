@@ -24,7 +24,6 @@ def configure_logger():
 def configure_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--lod", help='level of detail, defaults to 2', default=2, type=int)
-    parser.add_argument("--datapath", help='path to CityGML files, defaults to ./data', default="data")
     parser.add_argument("--filename", help='specify if you want to run pipeline on a certain file')
     parser.add_argument(
         "--pv-efficiency",
@@ -48,7 +47,6 @@ if __name__ == "__main__":
     parser = configure_parser()
     args = parser.parse_args()
 
-    data_path = args.datapath
     specific_file_name = args.filename
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
@@ -62,4 +60,4 @@ if __name__ == "__main__":
 
     lod = Level.LOD1 if lod_num == 1 else Level.LOD2
 
-    SolarPotentialPipeline(data_path, specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d, output_format)
+    SolarPotentialPipeline(specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d, output_format)

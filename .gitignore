@@ -1,4 +1,8 @@
 __pycache__
-data
 logs
 venv
+data/lod1/*
+data/lod2/*
+data/tmp
+!data/lod1/PLACEHOLDER
+!data/lod2/PLACEHOLDER

@@ -11,12 +11,11 @@ UPDATED_PREFIX = "updated-"
 
 
 class Pipeline:
-    def __init__(self, data_path, single_file_name=None) -> None:
-        self.data_path = data_path
+    def __init__(self, single_file_name=None) -> None:
         self.single_file_name = single_file_name
 
     def process_files(self, level, processor):
-        path_util = PathUtil(self.data_path, level)
+        path_util = PathUtil(level)
         data_dir_path = path_util.get_data_dir_path()
 
         for filename in os.listdir(data_dir_path):    

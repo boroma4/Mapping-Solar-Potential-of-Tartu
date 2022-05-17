@@ -12,5 +12,5 @@ npm i
 cd ..
 
 echo "Installing Node.js deps"
-cd pipelines/node_scripts
+cd pipeline/node_scripts
 npm i

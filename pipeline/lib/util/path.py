@@ -8,15 +8,14 @@ DATA_PATH = "data"
 
 
 class PathUtil:
-    def __init__(self, data_path, lod):
-        self.data_path = data_path or DATA_PATH
+    def __init__(self, lod):
         self.__lod = lod
 
     def get_data_dir_path(self):
         if self.__lod == Level.LOD1:
-            return os.path.join(self.data_path, 'lod1')
+            return os.path.join(DATA_PATH, 'lod1')
         elif self.__lod == Level.LOD2:
-            return os.path.join(self.data_path, 'lod2')
+            return os.path.join(DATA_PATH, 'lod2')
         else:
             raise ArgumentError("Invalid LOD")
 
