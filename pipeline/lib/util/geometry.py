@@ -4,8 +4,6 @@ import math
 import numpy as np
 
 # unit normal vector of plane defined by points a, b, and c
-
-
 def unit_normal(a, b, c):
     x = np.linalg.det([[1, a[1], a[2]],
                        [1, b[1], b[2]],

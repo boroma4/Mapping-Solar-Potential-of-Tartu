@@ -7,11 +7,6 @@ import os
 
 
 def configure_logger():
-    dir_name = "logs"
-
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
-
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
@@ -35,7 +30,12 @@ def configure_parser():
         help="losses in cables, power inverters, dirt, etc. defaults to 0.14",
         type=float,
         default=0.14)
-    parser.add_argument("--optimize-2d", help="optimize 3D tiles output for 2D map", type=bool, default=True)
+    parser.add_argument(
+        "--roof-coverage",
+        help="fraction of the roof that can be covered with solar panels, defaults to 0.8",
+        type=float,
+        default=0.8)
+    parser.add_argument("--optimize-2d", help="optimize the buildings to have the floor at z = 0", type=bool, default=True)
     parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
 
 
@@ -51,13 +51,16 @@ if __name__ == "__main__":
     lod_num = args.lod
     pv_efficiency = args.pv_efficiency
     pv_loss = args.pv_loss
+    roof_coverage = args.roof_coverage
     optimize_2d = args.optimize_2d
     output_format = args.output_format
 
+    lods = {
+        1: Level.LOD1,
+        2: Level.LOD2
+    }
 
-    if lod_num not in [1, 2]:
+    if lod_num not in lods.keys():
         raise Exception("Unsupported LOD")
 
-    lod = Level.LOD1 if lod_num == 1 else Level.LOD2
-
-    SolarPotentialPipeline(specific_file_name).run(lod, pv_efficiency, pv_loss, optimize_2d, output_format)
+    SolarPotentialPipeline(specific_file_name).run(lods[lod_num], pv_efficiency, pv_loss, roof_coverage, optimize_2d, output_format)

@@ -17,6 +17,8 @@ class PvgisRequestBuilder:
         self.output_format = "json"
         self.loss = 0.14
         self.optimal_angles = False
+        self.angle = 0
+        self.azimuth = 0
 
     def set_location(self, lon, lat):
         self.lon = lon
@@ -68,12 +70,24 @@ class PvgisRequestBuilder:
             "peakpower": float(self.peak_power),
             "loss": float(self.loss),
             "mountingplace": self.mounting_place,
-            # "angle": float(getattr(self, "angle")),
-            # "aspect": float(getattr(self, "azimuth")),
+            "angle": float(self.angle),
+            "aspect": float(self.azimuth),
             "outputformat": self.output_format,
             "raddatabase": self.db,
             "optimalangles": int(self.optimal_angles)
         }
+
+
+def make_empty_response():
+    response = {"totals": {"fixed": {"E_y": 0}}}
+    response["totals"]["fixed"]["E_m_exact"] = []
+    response["monthly"] = {}
+    response["monthly"]["fixed"] = []
+    for i in range(12):
+        response["totals"]["fixed"]["E_m_exact"].append(0)
+        response["monthly"]["fixed"].append({"E_m": 0})
+
+    return response
 
 
 # variables:

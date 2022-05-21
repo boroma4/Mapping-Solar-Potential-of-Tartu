@@ -37,29 +37,30 @@ const processRequests = async (requestPayloads) => {
     let batch = [];
 
     let batchesDone = 0;
-    const countTotal = Object.keys(requestPayloads).length;
+    const countTotal = Object.values(requestPayloads).reduce((acc, currentArray) => acc + currentArray.length, 0);
     const numBatches = Math.ceil(countTotal / BATCH_LIMIT);
-
     console.log("Sending requests to PVGIS API in batches, batch size: " + BATCH_LIMIT)
 
     for (const id of Object.keys(requestPayloads)) {
-        const payload = requestPayloads[id];
-        const urlParams = new URLSearchParams(payload).toString();
-        const requestUrl = `${BASE_PVCALC_URL}?${urlParams}`;
-        const requestPromise = getRequest(id, requestUrl);
-        
-        batch.push(requestPromise);
+        const roofPayloadList = requestPayloads[id];
+        for (const payload of roofPayloadList){
+            const urlParams = new URLSearchParams(payload).toString();
+            const requestUrl = `${BASE_PVCALC_URL}?${urlParams}`;
+            const requestPromise = getRequest(id, requestUrl);
+            
+            batch.push(requestPromise);
 
-        if (batch.length >= BATCH_LIMIT) {
-            batch.forEach((promise) => promises.push(promise));
-            batch = [];
-            batchesDone++;
+            if (batch.length >= BATCH_LIMIT) {
+                batch.forEach((promise) => promises.push(promise));
+                batch = [];
+                batchesDone++;
 
-            if (batchesDone % 15 == 0) {
-                console.log(`${batchesDone}/${numBatches} batches done`);
+                if (batchesDone % 15 == 0) {
+                    console.log(`${batchesDone}/${numBatches} batches done`);
+                }
+                // to avoid rate-limiting
+                await sleep(RATE_LIMIT_COOLDOWN_MS);
             }
-            // to avoid rate-limiting
-            await sleep(RATE_LIMIT_COOLDOWN_MS);
         }
     };
     console.log(`${numBatches}/${numBatches} batches done`);
@@ -74,7 +75,17 @@ const writeOutput = (resultsList) => {
     
     for (const result of resultsList) {
         const [id, data] = result;
-        output[id] = data;
+
+        // an error was returned, could be that roof area is too small
+        if (!data){
+            continue;
+        }
+
+        if (output[id]) {
+            output[id].push(data);
+        } else {
+            output[id] = [data];
+        }
     }
 
     writeFileSync(`${tmpPath}/responses.json`, JSON.stringify(output), 'utf8');
