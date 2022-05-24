@@ -28,19 +28,20 @@ class SolarPotentialPipeline(Pipeline):
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
         attribute_map = self.__add_solar_potential_to_attribute_map(attribute_map)
-        pv_output_map = self.__calculate_solar_stats(attribute_map)
+        pv_output_map = self.__calculate_city_solar_stats(attribute_map)
 
         original_file_path = path_util.get_path_gml(filename)
-        processed_file_path = path_util.get_path_gml(f"{UPDATED_PREFIX}{filename}")
+        output_dir_path = original_file_path.removesuffix(".gml") + "-output"
+        processed_file_path = os.path.join(output_dir_path, f"{UPDATED_PREFIX}{filename}")
 
+        if not os.path.exists(output_dir_path):
+            os.mkdir(output_dir_path)
+        
         logging.info("Updating XML tree")
         self.__write_solar_output_to_tree(buildings, attribute_map)
         tree.write(processed_file_path)
 
-        output_dir_path = original_file_path.removesuffix(".gml") + "-output"
-        if not os.path.exists(output_dir_path):
-            os.mkdir(output_dir_path)
-        
+
         logging.info("Wrtiting results to JSON files")
         self.__write_city_attributes_json(attribute_map, output_dir_path)
         self.__write_city_pv_json(pv_output_map, output_dir_path)
@@ -72,19 +73,19 @@ class SolarPotentialPipeline(Pipeline):
             attribute_map[id] = attribute_map.get(id, {})
             attribute_map[id]["roofs"] = []
 
-            # https://epsg.io/3301, unit - meters
-            for points in building.get_surface_points():
-                surface = Surface(points.text)
+            for surface in building.get_surfaces():
+                if not surface.is_roof(z_min):
+                    continue
 
-                if surface.is_roof(z_min):
-                    count_roofs += 1
-                    area = surface.area()
-                    azimuth, tilt = surface.angles()
+                count_roofs += 1
+                area = surface.area()
+                azimuth, tilt = surface.angles()
 
-                    roof_attribs = {"area": area, "azimuth": azimuth, "tilt": tilt}
+                roof_attribs = {"area": area, "azimuth": azimuth, "tilt": tilt}
 
-                    if roof_attribs not in attribute_map[id]["roofs"]:
-                        attribute_map[id]["roofs"].append(roof_attribs)
+                # handling duplicated points
+                if roof_attribs not in attribute_map[id]["roofs"]:
+                    attribute_map[id]["roofs"].append(roof_attribs)
 
             if "roofs" not in attribute_map[id]:
                 count_no_roofs += 1
@@ -104,7 +105,7 @@ class SolarPotentialPipeline(Pipeline):
 
         logging.info(
             f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
-        logging.info(f"{count_roofs} roofs detected")
+        logging.info(f"{count_roofs} roof surfaces detected")
 
         return attribute_map
 
@@ -130,15 +131,17 @@ class SolarPotentialPipeline(Pipeline):
                     .set_location(lon, lat) \
                     .set_peak_power_kwp(peak_power_kpw) \
                     .set_mounting_place("building") \
-                    .set_loss(self.pv_loss) 
+                    .set_loss(self.pv_loss) \
+                    .set_angle(roof["tilt"]) \
+                    .set_azimuth(roof["azimuth"])
 
+                # filtering falsely detected surfaces
+                if usable_roof_area < 1:
+                    continue
+
+                # Uses best possible angles becacuse it should be easy to adjust those on a flat roof
                 if roof["tilt"] == 0:
-                    request_builder.optimize_angles()
-                else:
-                    # specify tilt and azimuth of an inclined roof
-                    request_builder.set_angle(roof["tilt"])
-                    request_builder.set_angle(roof["azimuth"])
-               
+                    request_builder.optimize_angles()   
 
                 payload_map[building_id].append(request_builder.get_payload())
 
@@ -166,24 +169,46 @@ class SolarPotentialPipeline(Pipeline):
                 pv_data[building_id] = [make_empty_response()]
 
             for i in range(len(pv_data[building_id])):
-                pv_data[building_id][i]["totals"]["fixed"]["E_m_exact"] = []
                 roof_pv_data = pv_data[building_id][i]
+                roof_pv_data["totals"]["fixed"]["E_m_exact"] = []
 
                 for month in range(12):
-                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(roof_pv_data["monthly"]["fixed"][month]["E_m"])
+                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(roof_pv_data["monthly"]["fixed"][month]["E_m"] or 0)
 
-            pv_attributes = [data["totals"]["fixed"] for data in pv_data[building_id]]
-            attribute_map[building_id] = {"building": attribute_map[building_id], "roofs_pv_list": pv_attributes}
+            roofs_pv_list = [data["totals"]["fixed"] for data in pv_data[building_id]]
+            
+            # In case yearly energy is None
+            for roof_pv in roofs_pv_list:
+                roof_pv["E_y"] = roof_pv["E_y"] or 0
+
+            attribute_map[building_id] = {"building": attribute_map[building_id], "roofs_pv_list": roofs_pv_list}
         
         return attribute_map
     
+    
+    # Calculates estimated monthly and yearly energy production
+    def __calculate_city_solar_stats(self, attribute_map):
+        output = {}
+        total_yearly = 0
+        total_monthly = [0] * 12
+
+        for building_data in attribute_map.values():
+            roof_pv_data_list = building_data["roofs_pv_list"]
+            total_yearly += round(sum([el["E_y"] for el in roof_pv_data_list]), 3)  
+            for month in range(12):
+                total_monthly[month] += round(sum([el["E_m_exact"][month] for el in roof_pv_data_list]), 3)
+
+        output["total_yearly_energy_kwh"] = total_yearly
+        output["total_monthly_energy_kwh_list"] = total_monthly
+        return output
+
 
     @timed("Updating the XML tree with solar data")
     def __write_solar_output_to_tree(self, buildings, attribute_map):
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
             total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in attribute_map[id]["roofs_pv_list"]]), 3)
-            self.__update_tree(xml_building, [["yearly-power", "doubleAttribute", total_yearly_power]])
+            self.__update_tree(xml_building, [["power", "doubleAttribute", total_yearly_power]])
 
 
     @timed("Sending requests to PVGIS from Node.js")
@@ -240,22 +265,6 @@ class SolarPotentialPipeline(Pipeline):
             xml_tag.attrib["name"] = name
             xml_value = ET.SubElement(xml_tag, f'{gen}:value')
             xml_value.text = str(value)
-    
-
-    def __calculate_solar_stats(self, attribute_map):
-        output = {}
-        total_yearly = 0
-        total_monthly = [0] * 12
-
-        for building_data in attribute_map.values():
-            roof_pv_data_list = building_data["roofs_pv_list"]
-            total_yearly += round(sum([el["E_y"] for el in roof_pv_data_list]), 3)  
-            for month in range(12):
-                total_monthly[month] += round(sum([el["E_m_exact"][month] for el in roof_pv_data_list]), 3)
-
-        output["total_yearly_energy_kwh"] = total_yearly
-        output["total_monthly_energy_kwh_list"] = total_monthly
-        return output
 
 
     def extract_integer_id(self, string_id):

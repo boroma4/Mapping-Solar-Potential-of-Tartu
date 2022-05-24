@@ -1,5 +1,6 @@
 from lib.util.xml_constants import *
 from pyproj import Proj, transform
+from pipeline.lib.citygml.surface import Surface
 
 
 class Building:
@@ -7,8 +8,9 @@ class Building:
         self.id = id
         self.xml_building = xml_building
 
-    def get_surface_points(self):
-        return self.xml_building.iter(f"{GML}posList")
+    def get_surfaces(self):
+        return [Surface(points) for points in self.xml_building.iter(f"{GML}posList")]
+
 
     def get_z_min(self):
         for attribute in self.xml_building.iter(f"{GEN}doubleAttribute"):
@@ -18,7 +20,7 @@ class Building:
         return 0
 
     def get_approx_lat_lon(self):
-        first_surface_str = list(self.get_surface_points())[0].text
+        first_surface_str = list(self.get_surfaces())[0].text
         x, y = list(map(float, first_surface_str.split(" ")[:2]))
 
         # TODO: make dynamic based on the file
@@ -27,7 +29,7 @@ class Building:
     def optimize_for_2d_map(self):        
         floor_z = self.__get_floor_z()
 
-        for xml_points in self.get_surface_points():
+        for xml_points in self.get_surfaces():
             points = []
             floats = [float(e) for e in xml_points.text.split(" ")]
             divisions = len(floats) // 3
@@ -42,7 +44,7 @@ class Building:
     def __get_floor_z(self):
         points = []
 
-        for xml_points in self.get_surface_points():
+        for xml_points in self.get_surfaces():
             floats = [float(e) for e in xml_points.text.split(" ")]
             divisions = len(floats) // 3
             for i in range(divisions):

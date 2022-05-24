@@ -8,7 +8,7 @@ interface Props {
 function CityStats ({ pvData }: Props) {
     const adjustYearlyEnergy = () => {
         const adjusted = adjustPowerUnits(pvData.total_yearly_energy_kwh);
-        return `${adjusted.value} ${adjusted.units}`
+        return `${adjusted.value.toFixed(4)} ${adjusted.units}`
     }
 
     return(

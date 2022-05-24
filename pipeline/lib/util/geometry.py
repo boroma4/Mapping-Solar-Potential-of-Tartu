@@ -56,7 +56,8 @@ def get_angles(normal):
         tilt = 90 - abs(math.degrees(math.atan(normal[2] / t)))
     tilt = round(tilt, 3)
 
-    return azimuth, tilt
+    # TODO: return azimuth, tilt
+    return 0, tilt
 
 
 def get_normal(polypoints):
