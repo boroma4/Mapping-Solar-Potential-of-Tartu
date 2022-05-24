@@ -35,9 +35,12 @@ def configure_parser():
         help="fraction of the roof that can be covered with solar panels, defaults to 0.8",
         type=float,
         default=0.8)
-    parser.add_argument("--optimize-2d", help="optimize the buildings to have the floor at z = 0", type=bool, default=True)
+    parser.add_argument(
+        "--optimize-2d",
+        help="optimize the buildings to have the floor at z = 0",
+        type=bool,
+        default=True)
     parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
-
 
     return parser
 
@@ -63,4 +66,10 @@ if __name__ == "__main__":
     if lod_num not in lods.keys():
         raise Exception("Unsupported LOD")
 
-    SolarPotentialPipeline(specific_file_name).run(lods[lod_num], pv_efficiency, pv_loss, roof_coverage, optimize_2d, output_format)
+    SolarPotentialPipeline(specific_file_name).run(
+        lods[lod_num],
+        pv_efficiency,
+        pv_loss,
+        roof_coverage,
+        optimize_2d,
+        output_format)

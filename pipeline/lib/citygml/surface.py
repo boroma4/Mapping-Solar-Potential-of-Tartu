@@ -3,12 +3,13 @@ from lib.util import geometry
 
 
 class Surface:
-    def __init__(self, points_str: str) -> None:
+    def __init__(self, xml_element) -> None:
         self.points: list[list[float]] = []
-        self.__add_points(points_str)
+        self.raw_xml_element = xml_element
+        self.__add_points(xml_element)
 
-    def __add_points(self, points_str: str) -> None:
-        floats = [float(e) for e in points_str.split(" ")]
+    def __add_points(self, linear_ring_element) -> None:
+        floats = [float(e) for e in linear_ring_element.text.split(" ")]
         divisions = len(floats) // 3
         for i in range(divisions):
             # add every 3 values

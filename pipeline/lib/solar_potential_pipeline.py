@@ -36,19 +36,17 @@ class SolarPotentialPipeline(Pipeline):
 
         if not os.path.exists(output_dir_path):
             os.mkdir(output_dir_path)
-        
+
         logging.info("Updating XML tree")
         self.__write_solar_output_to_tree(buildings, attribute_map)
         tree.write(processed_file_path)
 
-
         logging.info("Wrtiting results to JSON files")
         self.__write_city_attributes_json(attribute_map, output_dir_path)
         self.__write_city_pv_json(pv_output_map, output_dir_path)
-        
+
         # Converting CityGML to visualizable format
         self.__convert_citygml_to_output_format(processed_file_path, output_dir_path)
-
 
     @timed("Building analysis")
     def __get_building_attributes(self, buildings):
@@ -97,7 +95,8 @@ class SolarPotentialPipeline(Pipeline):
             attribute_map[id]["total_roof_area"] = round(total_roof_area, 2)
             attribute_map[id]["lat"] = lat
             attribute_map[id]["lon"] = lon
-            self.__update_tree(xml_building, [["area", "doubleAttribute", total_roof_area], ["etak_id", "stringAttribute", id]])
+            self.__update_tree(xml_building, [["area", "doubleAttribute", total_roof_area], [
+                               "etak_id", "stringAttribute", id]])
 
             count_processed += 1
             if count_processed % 5000 == 0:
@@ -124,7 +123,7 @@ class SolarPotentialPipeline(Pipeline):
 
                 # area of the roof that can be covered
                 usable_roof_area = roof_area * self.roof_coverage
-                # peak power of the PV array installed 
+                # peak power of the PV array installed
                 peak_power_kpw = usable_roof_area * self.pv_efficiency
 
                 request_builder = PvgisRequestBuilder() \
@@ -141,7 +140,7 @@ class SolarPotentialPipeline(Pipeline):
 
                 # Uses best possible angles becacuse it should be easy to adjust those on a flat roof
                 if roof["tilt"] == 0:
-                    request_builder.optimize_angles()   
+                    request_builder.optimize_angles()
 
                 payload_map[building_id].append(request_builder.get_payload())
 
@@ -161,10 +160,11 @@ class SolarPotentialPipeline(Pipeline):
 
         with open(responses_json_path, 'r') as fp:
             pv_data = json.loads(fp.read())
-        
+
         # Processing API results for each roof of each building
         for building_id in attribute_map.keys():
-            # If building area is 0, request to the API will return an error instead of data and it won't be added to responses json
+            # If building area is 0, request to the API will return an error instead
+            # of data and it won't be added to responses json
             if building_id not in pv_data:
                 pv_data[building_id] = [make_empty_response()]
 
@@ -173,20 +173,21 @@ class SolarPotentialPipeline(Pipeline):
                 roof_pv_data["totals"]["fixed"]["E_m_exact"] = []
 
                 for month in range(12):
-                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(roof_pv_data["monthly"]["fixed"][month]["E_m"] or 0)
+                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(
+                        roof_pv_data["monthly"]["fixed"][month]["E_m"] or 0)
 
             roofs_pv_list = [data["totals"]["fixed"] for data in pv_data[building_id]]
-            
+
             # In case yearly energy is None
             for roof_pv in roofs_pv_list:
                 roof_pv["E_y"] = roof_pv["E_y"] or 0
 
             attribute_map[building_id] = {"building": attribute_map[building_id], "roofs_pv_list": roofs_pv_list}
-        
+
         return attribute_map
-    
-    
+
     # Calculates estimated monthly and yearly energy production
+
     def __calculate_city_solar_stats(self, attribute_map):
         output = {}
         total_yearly = 0
@@ -194,14 +195,13 @@ class SolarPotentialPipeline(Pipeline):
 
         for building_data in attribute_map.values():
             roof_pv_data_list = building_data["roofs_pv_list"]
-            total_yearly += round(sum([el["E_y"] for el in roof_pv_data_list]), 3)  
+            total_yearly += round(sum([el["E_y"] for el in roof_pv_data_list]), 3)
             for month in range(12):
                 total_monthly[month] += round(sum([el["E_m_exact"][month] for el in roof_pv_data_list]), 3)
 
         output["total_yearly_energy_kwh"] = total_yearly
         output["total_monthly_energy_kwh_list"] = total_monthly
         return output
-
 
     @timed("Updating the XML tree with solar data")
     def __write_solar_output_to_tree(self, buildings, attribute_map):
@@ -210,7 +210,6 @@ class SolarPotentialPipeline(Pipeline):
             total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in attribute_map[id]["roofs_pv_list"]]), 3)
             self.__update_tree(xml_building, [["power", "doubleAttribute", total_yearly_power]])
 
-
     @timed("Sending requests to PVGIS from Node.js")
     def __send_pvgis_api_requests(self):
         logging.info("Running batch-pvgis-requests.mjs")
@@ -218,7 +217,6 @@ class SolarPotentialPipeline(Pipeline):
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
             raise Exception(f"{js_script_path} failed!")
-
 
     def __write_city_attributes_json(self, attribute_map, output_dir_path):
         json_name = "city-attributes.json"
@@ -230,7 +228,6 @@ class SolarPotentialPipeline(Pipeline):
         json_file_size_mb = get_file_size_mb(json_path)
         logging.info(f"City attributes JSON is {json_file_size_mb} MB")
 
-    
     def __write_city_pv_json(self, pv_output_map, output_dir_path):
         json_name = "city-pv.json"
         json_path = os.path.join(output_dir_path, json_name)
@@ -240,22 +237,19 @@ class SolarPotentialPipeline(Pipeline):
 
         json_file_size_mb = get_file_size_mb(json_path)
         logging.info(f"City PV stats JSON is {json_file_size_mb} MB")
-    
 
     def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path):
         if self.output_format == "tiles":
             self.__convert_to_3d_tiles(city_gml_file_path, output_dir_path)
-
 
     def __convert_to_3d_tiles(self, processed_gml_path, output_dir_path):
         logging.info("Converting CityGML to 3D tiles")
         logging.info("Running convert.mjs")
         js_script_path = self.path_util.get_js_script('convert.mjs')
         if os.system(
-            f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_gml_path} {output_dir_path}/") != 0:
+                f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_gml_path} {output_dir_path}/") != 0:
 
             raise Exception(f"{js_script_path} failed!")
-    
 
     def __update_tree(self, xml_building, attribs):
         gen = "ns3"
@@ -265,7 +259,6 @@ class SolarPotentialPipeline(Pipeline):
             xml_tag.attrib["name"] = name
             xml_value = ET.SubElement(xml_tag, f'{gen}:value')
             xml_value.text = str(value)
-
 
     def extract_integer_id(self, string_id):
         subparts = string_id.split("_")

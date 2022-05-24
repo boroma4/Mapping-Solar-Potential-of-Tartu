@@ -18,7 +18,7 @@ class Pipeline:
         path_util = PathUtil(level)
         data_dir_path = path_util.get_data_dir_path()
 
-        for filename in os.listdir(data_dir_path):    
+        for filename in os.listdir(data_dir_path):
             is_allowed_filename = not self.single_file_name or self.single_file_name == filename
             original_file_path = os.path.join(data_dir_path, filename)
             is_file = os.path.isfile(original_file_path)
