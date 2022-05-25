@@ -48,6 +48,8 @@ class SolarPotentialPipeline(Pipeline):
         # Converting CityGML to visualizable format
         self.__convert_citygml_to_output_format(processed_file_path, output_dir_path)
 
+        logging.info(f'Output files can be located at {output_dir_path}')
+
     @timed("Building analysis")
     def __get_building_attributes(self, buildings):
         count_total = len(buildings)

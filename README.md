@@ -1,12 +1,23 @@
 # Mapping Solar Potential of Tartu (and beyond)
 
-## Building data obtained from
+## Description
 
-https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html
+This project was developed as a prototype of a tool to visualize solar potential of Estonian cities.
 
-## API for simulating PV systems
+It was designed to work with the data from [Estonian Land Board](https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html).
 
-https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-information-system/getting-started-pvgis/api-non-interactive-service_en
+Currently the [PVGIS API](https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-information-system/getting-started-pvgis/api-non-interactive-service_en
+) is used as a backend for estimating solar power, in the future this might change to a ML model.
+
+## Running the pipeline
+
+Please take a look at `solar.sh` script which should give you an idea how to run the estimation pipeline.
+
+Run `python3 pipeline/main.py --help` to see the full list of parameters supported and their descriptions.
+
+## Running the web app
+
+Currently the web app can only be ran locally. Please place the output files from the pipeline in the `web-app/public` and then run `client.sh` script.
 
 ## Tech stack 
 * Python 3
@@ -15,10 +26,7 @@ https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-infor
 * Cesium
 * Vite
 
-## Requirements
-* Python 3.9+
-* Node.js 14.8+
+## Tested with
+* Python 3.9.7
+* Node.js 16.13.0
 
-## More information
-
-Please take a look at "docs" and "diagrams" directories to help you get started.
