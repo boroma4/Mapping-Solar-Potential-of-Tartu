@@ -32,9 +32,9 @@ def configure_parser():
         default=0.14)
     parser.add_argument(
         "--roof-coverage",
-        help="fraction of the roof that can be covered with solar panels, defaults to 0.8",
+        help="fraction of the roof that can be covered with solar panels, defaults to 0.90",
         type=float,
-        default=0.8)
+        default=0.90)
     parser.add_argument(
         "--optimize-2d",
         help="optimize the buildings to have the floor at z = 0",

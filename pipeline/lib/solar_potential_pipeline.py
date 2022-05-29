@@ -3,13 +3,13 @@ import logging
 import os
 import xml.etree.ElementTree as ET
 
-from lib.citygml.surface import Surface
 from lib.citygml.building import Building
 from lib.util.xml_constants import *
 from lib.pipeline import Pipeline, UPDATED_PREFIX
 from lib.solar_potential.pvgis_api import PvgisRequestBuilder, make_empty_response
 from lib.util.decorators import timed
 from lib.util.file_size import get_file_size_mb
+from lib.util.orientation import *
 
 
 class SolarPotentialPipeline(Pipeline):
@@ -58,7 +58,7 @@ class SolarPotentialPipeline(Pipeline):
         count_roofs = 0
         attribute_map = {}
 
-        logging.info("Getting useful attributes of the buildings")
+        logging.info("Analyzing CityGML file")
 
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
@@ -74,14 +74,12 @@ class SolarPotentialPipeline(Pipeline):
             attribute_map[id]["roofs"] = []
 
             for surface in building.get_surfaces():
-                if not surface.is_roof(z_min):
+                # A surface with area less than 2 m2 is not really suitable for solar panels
+                if not surface.is_roof(z_min) or surface.area < 2:
                     continue
 
                 count_roofs += 1
-                area = surface.area()
-                azimuth, tilt = surface.angles()
-
-                roof_attribs = {"area": area, "azimuth": azimuth, "tilt": tilt}
+                roof_attribs = {"area": surface.area, "azimuth": surface.azimuth, "tilt": surface.tilt, "orientation": surface.orientation}
 
                 # handling duplicated points
                 if roof_attribs not in attribute_map[id]["roofs"]:
@@ -91,14 +89,26 @@ class SolarPotentialPipeline(Pipeline):
                 count_no_roofs += 1
                 attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
 
-            total_roof_area = sum([roof["area"] for roof in attribute_map[id]["roofs"]])
+            building_attributes = attribute_map[id]
+
+            total_roof_area = sum([roof["area"] for roof in building_attributes["roofs"]])
+            north_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == NORTH])
+            south_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == SOUTH])
+            west_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == WEST])
+            east_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == EAST])
+
             lat, lon = building.get_approx_lat_lon()
 
-            attribute_map[id]["total_roof_area"] = round(total_roof_area, 2)
-            attribute_map[id]["lat"] = lat
-            attribute_map[id]["lon"] = lon
-            self.__update_tree(xml_building, [["area", "doubleAttribute", total_roof_area], [
-                               "etak_id", "stringAttribute", id]])
+            building_attributes["total_roof_area"] = round(total_roof_area, 2)
+            building_attributes["lat"] = lat
+            building_attributes["lon"] = lon
+            self.__update_tree(xml_building, [
+                ["area", "doubleAttribute", total_roof_area],
+                ["north-area", "doubleAttribute", north_roof_area],
+                ["south-area", "doubleAttribute", south_roof_area],
+                ["west-area", "doubleAttribute", west_roof_area],
+                ["east-area", "doubleAttribute", east_roof_area], 
+                ["etak_id", "stringAttribute", id]])
 
             count_processed += 1
             if count_processed % 5000 == 0:
@@ -136,12 +146,8 @@ class SolarPotentialPipeline(Pipeline):
                     .set_angle(roof["tilt"]) \
                     .set_azimuth(roof["azimuth"])
 
-                # filtering falsely detected surfaces
-                if usable_roof_area < 1:
-                    continue
-
-                # Uses best possible angles becacuse it should be easy to adjust those on a flat roof
-                if roof["tilt"] == 0:
+                # Uses best possible angles becacuse it should be easy to adjust those on a flat-ish roof
+                if roof["tilt"] <= 10:
                     request_builder.optimize_angles()
 
                 payload_map[building_id].append(request_builder.get_payload())

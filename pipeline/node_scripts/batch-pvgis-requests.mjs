@@ -4,7 +4,6 @@ import fetch from "node-fetch";
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 const BATCH_LIMIT = 30;
 const RATE_LIMIT_COOLDOWN_MS = 2000;
-const args = process.argv.slice(2);
 
 const sleep = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,11 +90,14 @@ const writeOutput = (resultsList) => {
     writeFileSync(`${tmpPath}/responses.json`, JSON.stringify(output), 'utf8');
 }
 
+const args = process.argv.slice(2);
+
 if (args.length != 1) {
     throw new Error("Invalid number of arguments");
 }
 
 const tmpPath = args[0];
+
 const requestPayloads = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
 const promises = await processRequests(requestPayloads);
 console.log("Waiting for promises to resolve")

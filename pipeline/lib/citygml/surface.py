@@ -1,5 +1,6 @@
 import numpy as np
 from lib.util import geometry
+from lib.util.orientation import *
 
 
 class Surface:
@@ -7,6 +8,10 @@ class Surface:
         self.points: list[list[float]] = []
         self.raw_xml_element = xml_element
         self.__add_points(xml_element)
+        self.normal = geometry.get_normal(self.points)
+        self.azimuth, self.tilt = geometry.get_angles(self.normal)
+        self.orientation = self.__get_orientation()
+        self.area = geometry.area(self.points)
 
     def __add_points(self, linear_ring_element) -> None:
         floats = [float(e) for e in linear_ring_element.text.split(" ")]
@@ -20,17 +25,19 @@ class Surface:
             self.points.append(current_points)
 
     def is_roof(self, z_min) -> bool:
-        _, tilt = self.angles()
-
-        is_tilted = tilt <= 60
+        is_tilted = self.tilt <= 60
         is_floor = all([point[2] == z_min for point in self.points])
 
         return is_tilted and not is_floor
-
-    def area(self):
-        return geometry.area(self.points)
-
+    
     def angles(self):
-        normal = geometry.get_normal(self.points)
-        az, tilt = geometry.get_angles(normal)
-        return az, tilt
+        return self.tilt, self.azimuth
+
+    def __get_orientation(self):
+        if -45 <= self.azimuth <= 45:
+            return SOUTH
+        if -135 <= self.azimuth <= 45:
+            return EAST
+        if 45 <= self.azimuth <= 135:
+            return WEST
+        return NORTH

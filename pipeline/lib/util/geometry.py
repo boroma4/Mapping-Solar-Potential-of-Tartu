@@ -41,13 +41,15 @@ def area(poly):
 def get_angles(normal):
     """Get the azimuth and altitude from the normal vector."""
     # -- Convert from polar system to azimuth
-
-    # TODO: convert to [-180, 180]
     azimuth = 90 - math.degrees(math.atan2(normal[1], normal[0]))
     if azimuth >= 360.0:
         azimuth -= 360.0
     elif azimuth < 0.0:
         azimuth += 360.0
+
+    # Azimuth is [0, 360], 0 is North direction, East is 90, West is -90
+    # Converting to [-180, 180], 0 is South direction to be compatible with PVGIS API, East must be -90, West 90
+    azimuth -= 180
 
     #[0, 90]
     t = math.sqrt(normal[0]**2 + normal[1]**2)
@@ -58,8 +60,7 @@ def get_angles(normal):
         tilt = 90 - abs(math.degrees(math.atan(normal[2] / t)))
     tilt = round(tilt, 3)
 
-    # TODO: return azimuth, tilt
-    return 0, tilt
+    return azimuth, tilt
 
 
 def get_normal(polypoints):
