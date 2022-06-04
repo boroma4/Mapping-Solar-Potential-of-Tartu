@@ -22,10 +22,10 @@ class Pipeline:
             is_allowed_filename = not self.single_file_name or self.single_file_name == filename
             original_file_path = os.path.join(data_dir_path, filename)
             is_file = os.path.isfile(original_file_path)
-            is_valid_prefix_and_suffix = original_file_path.endswith(
-                ".gml") and not filename.startswith(UPDATED_PREFIX)
+            is_valid_prefix = not filename.startswith(UPDATED_PREFIX)
+            is_valid_suffix = filename.endswith(".gml") or filename.endswith(".xml")
 
-            if is_file and is_valid_prefix_and_suffix and is_allowed_filename:
+            if is_file and is_valid_prefix and is_valid_suffix and is_allowed_filename:
                 logging.info(f'Processing {filename}, level: {level}')
                 start_time = time.time()
 

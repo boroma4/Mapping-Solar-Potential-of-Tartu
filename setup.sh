@@ -1,9 +1,9 @@
 echo "Installing python deps"
-pip install virtualenv
+pip3 install virtualenv
 virtualenv venv
 source venv/bin/activate
-pip install -r pipeline/requirements.txt
-pip install autopep8
+pip3 install -r pipeline/requirements.txt
+pip3 install autopep8
 
 
 echo "Installing react app deps"

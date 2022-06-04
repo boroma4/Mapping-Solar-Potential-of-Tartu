@@ -61,8 +61,8 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Analyzing CityGML file")
 
         for xml_building in buildings:
-            id = self.extract_integer_id(xml_building[0].attrib[ID])
-            building = Building(id, xml_building)
+            building_id = self.extract_integer_id(xml_building[0].attrib[ID])
+            building = Building(building_id, xml_building)
 
             if self.optimize_2d:
                 building.optimize_for_2d_map()
@@ -70,8 +70,8 @@ class SolarPotentialPipeline(Pipeline):
             else:
                 z_min = building.get_z_min()
 
-            attribute_map[id] = attribute_map.get(id, {})
-            attribute_map[id]["roofs"] = []
+            attribute_map[building_id] = attribute_map.get(building_id, {})
+            attribute_map[building_id]["roofs"] = []
 
             for surface in building.get_surfaces():
                 # A surface with area less than 2 m2 is not really suitable for solar panels
@@ -82,14 +82,14 @@ class SolarPotentialPipeline(Pipeline):
                 roof_attribs = {"area": surface.area, "azimuth": surface.azimuth, "tilt": surface.tilt, "orientation": surface.orientation}
 
                 # handling duplicated points
-                if roof_attribs not in attribute_map[id]["roofs"]:
-                    attribute_map[id]["roofs"].append(roof_attribs)
+                if roof_attribs not in attribute_map[building_id]["roofs"]:
+                    attribute_map[building_id]["roofs"].append(roof_attribs)
 
-            if "roofs" not in attribute_map[id]:
+            if "roofs" not in attribute_map[building_id]:
                 count_no_roofs += 1
-                attribute_map[id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
+                attribute_map[building_id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
 
-            building_attributes = attribute_map[id]
+            building_attributes = attribute_map[building_id]
 
             total_roof_area = sum([roof["area"] for roof in building_attributes["roofs"]])
             north_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == NORTH])
@@ -108,7 +108,7 @@ class SolarPotentialPipeline(Pipeline):
                 ["south-area", "doubleAttribute", south_roof_area],
                 ["west-area", "doubleAttribute", west_roof_area],
                 ["east-area", "doubleAttribute", east_roof_area], 
-                ["etak_id", "stringAttribute", id]])
+                ["etak_id", "stringAttribute", building_id]])
 
             count_processed += 1
             if count_processed % 5000 == 0:
@@ -153,6 +153,7 @@ class SolarPotentialPipeline(Pipeline):
                 payload_map[building_id].append(request_builder.get_payload())
 
         logging.info("Storing requests data to be processed by Node.js script")
+
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         requests_json_path = tmp_dir_path + "/requests.json"
 
@@ -160,6 +161,7 @@ class SolarPotentialPipeline(Pipeline):
             json.dump(payload_map, fp)
             logging.info(f"File created: {requests_json_path}")
 
+        # calls the Node.js script which saves results to a new json file
         self.__send_pvgis_api_requests()
 
         responses_json_path = tmp_dir_path + "/responses.json"
@@ -181,9 +183,10 @@ class SolarPotentialPipeline(Pipeline):
                 roof_pv_data["totals"]["fixed"]["E_m_exact"] = []
 
                 for month in range(12):
-                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(
-                        roof_pv_data["monthly"]["fixed"][month]["E_m"] or 0)
+                    monthly_power = roof_pv_data["monthly"]["fixed"][month]["E_m"] or 0
+                    roof_pv_data["totals"]["fixed"]["E_m_exact"].append(monthly_power)
 
+            # shrink the dict a bit
             roofs_pv_list = [data["totals"]["fixed"] for data in pv_data[building_id]]
 
             # In case yearly energy is None
@@ -194,7 +197,7 @@ class SolarPotentialPipeline(Pipeline):
 
         return attribute_map
 
-    # Calculates estimated monthly and yearly energy production
+    # Calculates estimated monthly and yearly energy production for the whole city
 
     def __calculate_city_solar_stats(self, attribute_map):
         output = {}

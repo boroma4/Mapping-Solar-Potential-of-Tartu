@@ -3,7 +3,6 @@ from lib.util.lod import Level
 
 import argparse
 import logging
-import os
 
 
 def configure_logger():
