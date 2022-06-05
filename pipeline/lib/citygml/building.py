@@ -1,4 +1,4 @@
-from lib.util.xml_constants import *
+from lib.util.constants import *
 from pyproj import Proj, transform
 from lib.citygml.surface import Surface
 

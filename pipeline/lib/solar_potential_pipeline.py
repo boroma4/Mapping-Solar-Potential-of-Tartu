@@ -4,12 +4,11 @@ import os
 import xml.etree.ElementTree as ET
 
 from lib.citygml.building import Building
-from lib.util.xml_constants import *
+from lib.util.constants import *
 from lib.pipeline import Pipeline, UPDATED_PREFIX
 from lib.solar_potential.pvgis_api import PvgisRequestBuilder, make_empty_response
 from lib.util.decorators import timed
 from lib.util.file_size import get_file_size_mb
-from lib.util.orientation import *
 
 
 class SolarPotentialPipeline(Pipeline):
@@ -37,7 +36,6 @@ class SolarPotentialPipeline(Pipeline):
         if not os.path.exists(output_dir_path):
             os.mkdir(output_dir_path)
 
-        logging.info("Updating XML tree")
         self.__write_solar_output_to_tree(buildings, attribute_map)
         tree.write(processed_file_path)
 
@@ -90,12 +88,14 @@ class SolarPotentialPipeline(Pipeline):
                 attribute_map[building_id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
 
             building_attributes = attribute_map[building_id]
+            roofs = building_attributes["roofs"]
 
-            total_roof_area = sum([roof["area"] for roof in building_attributes["roofs"]])
-            north_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == NORTH])
-            south_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == SOUTH])
-            west_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == WEST])
-            east_roof_area = sum([roof["area"] for roof in building_attributes["roofs"] if roof["orientation"] == EAST])
+            total_roof_area = round(sum([roof["area"] for roof in roofs]), 3)
+            north_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == NORTH]), 3)
+            south_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == SOUTH]), 3)
+            west_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == WEST]), 3)
+            east_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == EAST]), 3)
+            flat_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == NONE]), 3)
 
             lat, lon = building.get_approx_lat_lon()
 
@@ -108,6 +108,7 @@ class SolarPotentialPipeline(Pipeline):
                 ["south-area", "doubleAttribute", south_roof_area],
                 ["west-area", "doubleAttribute", west_roof_area],
                 ["east-area", "doubleAttribute", east_roof_area], 
+                ["flat-area", "doubleAttribute", flat_roof_area], 
                 ["etak_id", "stringAttribute", building_id]])
 
             count_processed += 1
@@ -120,7 +121,7 @@ class SolarPotentialPipeline(Pipeline):
 
         return attribute_map
 
-    @timed("PVGIS requests")
+    @timed("Estimating solar potential through PVGIS requests")
     def __add_solar_potential_to_attribute_map(self, attribute_map):
         logging.info("Obtaining solar potential from PVGIS API")
         payload_map = {}
@@ -130,6 +131,7 @@ class SolarPotentialPipeline(Pipeline):
             payload_map[building_id] = []
             for roof in data["roofs"]:
                 roof_area = roof["area"]
+                orientation = roof["orientation"]
                 lat = data["lat"]
                 lon = data["lon"]
 
@@ -147,10 +149,11 @@ class SolarPotentialPipeline(Pipeline):
                     .set_azimuth(roof["azimuth"])
 
                 # Uses best possible angles becacuse it should be easy to adjust those on a flat-ish roof
-                if roof["tilt"] <= 10:
+                if roof["tilt"] <= FLAT_SURFACE_MAX_TILT:
                     request_builder.optimize_angles()
 
-                payload_map[building_id].append(request_builder.get_payload())
+                request_data = [orientation, request_builder.get_payload()]
+                payload_map[building_id].append(request_data)
 
         logging.info("Storing requests data to be processed by Node.js script")
 
@@ -187,7 +190,7 @@ class SolarPotentialPipeline(Pipeline):
                     roof_pv_data["totals"]["fixed"]["E_m_exact"].append(monthly_power)
 
             # shrink the dict a bit
-            roofs_pv_list = [data["totals"]["fixed"] for data in pv_data[building_id]]
+            roofs_pv_list = [data["totals"]["fixed"] | {"orientation": data["orientation"]} for data in pv_data[building_id]]
 
             # In case yearly energy is None
             for roof_pv in roofs_pv_list:
@@ -218,10 +221,24 @@ class SolarPotentialPipeline(Pipeline):
     def __write_solar_output_to_tree(self, buildings, attribute_map):
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
-            total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in attribute_map[id]["roofs_pv_list"]]), 3)
-            self.__update_tree(xml_building, [["power", "doubleAttribute", total_yearly_power]])
+            roofs_pv = attribute_map[id]["roofs_pv_list"]
+            total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv]), 3)
+            north_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == NORTH]), 3)
+            south_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == SOUTH]), 3)
+            west_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == WEST]), 3)
+            east_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == EAST]), 3)
+            optimized_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == NONE]), 3)
 
-    @timed("Sending requests to PVGIS from Node.js")
+
+            self.__update_tree(xml_building, [
+                ["power", "doubleAttribute", total_yearly_power],
+                ["north-power", "doubleAttribute", north_yearly_power],
+                ["south-power", "doubleAttribute", south_yearly_power],
+                ["west-power", "doubleAttribute", west_yearly_power],
+                ["east-power", "doubleAttribute", east_yearly_power],
+                ["optimized-power", "doubleAttribute", optimized_yearly_power],
+            ])
+
     def __send_pvgis_api_requests(self):
         logging.info("Running batch-pvgis-requests.mjs")
         tmp_dir_path = self.path_util.get_tmp_dir_path()

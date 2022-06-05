@@ -1,7 +1,9 @@
 import { Viewer, Cesium3DTileset, CesiumComponentRef } from "resium";
-import { Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle } from "cesium";
+import { Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion } from "cesium";
 import { useEffect, useRef } from "react";
 import { yearlyPowerLegendKwh } from "../utils/YearlyPowerLegend";
+
+Ion.defaultAccessToken=import.meta.env.VITE_CESIUM_ION_TOKEN;
 
 function Map() {
     const ref = useRef<CesiumComponentRef<CesiumViewer>>(null);

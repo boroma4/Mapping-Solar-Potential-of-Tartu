@@ -96,7 +96,7 @@ class PvgisRequestBuilder:
 
 
 def make_empty_response():
-    response = {"totals": {"fixed": {"E_y": 0, "E_m_exact": []}}, "monthly": {"fixed": []}}
+    response = {"totals": {"fixed": {"E_y": 0, "E_m_exact": []}}, "monthly": {"fixed": []}, "orientation": "north"}
     for _ in range(12):
         response["totals"]["fixed"]["E_m_exact"].append(0)
         response["monthly"]["fixed"].append({"E_m": 0})

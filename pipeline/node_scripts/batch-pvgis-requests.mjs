@@ -9,7 +9,7 @@ const sleep = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const getRequest = async (id, url) => {
+const getRequest = async (id, orientation, url) => {
     const requestPromise = fetch(url);
 
     return new Promise(async (resolve, reject) => {
@@ -22,7 +22,7 @@ const getRequest = async (id, url) => {
                 console.log(response.text);
                 throw e;
             }
-            resolve([id, result["outputs"]]);
+            resolve([id, orientation, result["outputs"]]);
         }
         catch(e) {
             console.log(e);
@@ -31,21 +31,23 @@ const getRequest = async (id, url) => {
     });
 }
 
-const processRequests = async (requestPayloads) => {
+const processRequests = async (requestDataList) => {
     const promises = [];
     let batch = [];
 
     let batchesDone = 0;
-    const countTotal = Object.values(requestPayloads).reduce((acc, currentArray) => acc + currentArray.length, 0);
+    const countTotal = Object.values(requestDataList).reduce((acc, currentArray) => acc + currentArray.length, 0);
     const numBatches = Math.ceil(countTotal / BATCH_LIMIT);
     console.log("Sending requests to PVGIS API in batches, batch size: " + BATCH_LIMIT)
 
-    for (const id of Object.keys(requestPayloads)) {
-        const roofPayloadList = requestPayloads[id];
-        for (const payload of roofPayloadList){
+    for (const id of Object.keys(requestDataList)) {
+        const roofRequestList = requestDataList[id];
+        for (const roofRequest of roofRequestList){
+            const [orientation, payload] = roofRequest;
+
             const urlParams = new URLSearchParams(payload).toString();
             const requestUrl = `${BASE_PVCALC_URL}?${urlParams}`;
-            const requestPromise = getRequest(id, requestUrl);
+            const requestPromise = getRequest(id, orientation, requestUrl);
             
             batch.push(requestPromise);
 
@@ -73,7 +75,7 @@ const writeOutput = (resultsList) => {
     const output = {};
     
     for (const result of resultsList) {
-        const [id, data] = result;
+        const [id, orientation, data] = result;
 
         // an error was returned, could be that roof area is too small
         if (!data){
@@ -81,9 +83,9 @@ const writeOutput = (resultsList) => {
         }
 
         if (output[id]) {
-            output[id].push(data);
+            output[id].push({...data, orientation});
         } else {
-            output[id] = [data];
+            output[id] = [{...data, orientation}];
         }
     }
 
@@ -98,8 +100,8 @@ if (args.length != 1) {
 
 const tmpPath = args[0];
 
-const requestPayloads = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
-const promises = await processRequests(requestPayloads);
+const requestDataList = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
+const promises = await processRequests(requestDataList);
 console.log("Waiting for promises to resolve")
 const results = await Promise.all(promises);
 writeOutput(results);

@@ -5,7 +5,7 @@ import time
 import datetime
 
 from lib.util.path import PathUtil
-from lib.util.xml_constants import *
+from lib.util.constants import *
 
 UPDATED_PREFIX = "updated-"
 

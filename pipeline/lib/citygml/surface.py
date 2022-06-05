@@ -1,6 +1,5 @@
-import numpy as np
 from lib.util import geometry
-from lib.util.orientation import *
+from lib.util.constants import *
 
 
 class Surface:
@@ -34,6 +33,8 @@ class Surface:
         return self.tilt, self.azimuth
 
     def __get_orientation(self):
+        if self.tilt <= FLAT_SURFACE_MAX_TILT:
+            return NONE
         if -45 <= self.azimuth <= 45:
             return SOUTH
         if -135 <= self.azimuth <= 45:
