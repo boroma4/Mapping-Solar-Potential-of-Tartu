@@ -5,14 +5,14 @@ sudo apt -y install nodejs
 
 echo "installing python 3.9"
 sudo apt install python3.9-venv
-sudo apt install python3.9-pip
+sudo apt-get -y install python3-pip
 
-python3 -m venv venv
+python3.9 -m venv venv
 
 echo "Installing python deps"
 source venv/bin/activate
-pip3 install -r pipeline/requirements.txt
-pip3 install autopep8
+pip3.9 install -r pipeline/requirements.txt
+pip3.9 install autopep8
 
 echo "Installing react app deps"
 cd web-app
@@ -22,3 +22,6 @@ cd ..
 echo "Installing Node.js deps"
 cd pipeline/node_scripts
 npm i
+
+echo "install screen"
+sudo apt install screen
