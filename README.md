@@ -26,7 +26,7 @@ Currently the web app can only be ran locally. Please place the output files fro
 * Cesium
 * Vite
 
-## Tested with
-* Python 3.9.7
-* Node.js 16.13.0
+## Requirements
+* Python 3.9+
+* Node.js 15+
 
