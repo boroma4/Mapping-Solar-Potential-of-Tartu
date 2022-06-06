@@ -15,8 +15,6 @@ function Map() {
         }
     }, []);
 
-
-
     const createColorConditions = () => {
       const arr = Object.entries(yearlyPowerLegendKwh).sort((a, b) => Number(b[0])- Number(a[0]));
       return arr.map(([powerValueKwh, color]) => {
