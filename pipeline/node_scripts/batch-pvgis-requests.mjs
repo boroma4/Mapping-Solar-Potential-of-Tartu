@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 const BATCH_LIMIT = 30;
-const RATE_LIMIT_COOLDOWN_MS = 2000;
+const RATE_LIMIT_COOLDOWN_MS = 1500;
 
 const sleep = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -56,10 +56,10 @@ const processRequests = async (requestDataList) => {
                 batch = [];
                 batchesDone++;
 
-                if (batchesDone % 15 == 0) {
+                if (batchesDone % 500 == 0) {
                     console.log(`${batchesDone}/${numBatches} batches done`);
                 }
-                // to avoid rate-limiting
+
                 await sleep(RATE_LIMIT_COOLDOWN_MS);
             }
         }
