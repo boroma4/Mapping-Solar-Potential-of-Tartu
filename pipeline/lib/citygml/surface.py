@@ -1,9 +1,10 @@
+from xml.etree.ElementTree import Element
 from lib.util import geometry
 from lib.util.constants import *
 
 
 class Surface:
-    def __init__(self, xml_element) -> None:
+    def __init__(self, xml_element: Element) -> None:
         self.points: list[list[float]] = []
         self.raw_xml_element = xml_element
         self.__add_points(xml_element)
@@ -12,7 +13,7 @@ class Surface:
         self.orientation = self.__get_orientation()
         self.area = geometry.area(self.points)
 
-    def __add_points(self, linear_ring_element) -> None:
+    def __add_points(self, linear_ring_element: Element) -> None:
         floats = [float(e) for e in linear_ring_element.text.split(" ")]
         divisions = len(floats) // 3
         for i in range(divisions):
@@ -23,7 +24,7 @@ class Surface:
 
             self.points.append(current_points)
 
-    def is_roof(self, z_min) -> bool:
+    def is_roof(self, z_min: float) -> bool:
         is_tilted = self.tilt <= 60
         is_floor = all([point[2] == z_min for point in self.points])
 

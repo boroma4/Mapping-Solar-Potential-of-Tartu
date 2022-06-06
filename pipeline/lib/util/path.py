@@ -8,7 +8,7 @@ DATA_PATH = "data"
 
 
 class PathUtil:
-    def __init__(self, lod):
+    def __init__(self, lod: Level):
         self.__lod = lod
 
     def get_data_dir_path(self):
@@ -19,17 +19,17 @@ class PathUtil:
         else:
             raise ArgumentError("Invalid LOD")
 
-    def get_path_gml(self, id):
+    def get_path_gml(self, id: str):
         if not id.endswith(".gml"):
             id += ".gml"
         return os.path.join(self.get_data_dir_path(), id)
 
-    def get_path_json(self, id):
+    def get_path_json(self, id: str):
         if not id.endswith(".json"):
             id += ".json"
         return os.path.join(self.get_data_dir_path(), id)
 
-    def get_js_script(self, name):
+    def get_js_script(self, name: str):
         return glob.glob(f"./**/node_scripts/{name}", recursive=True)[0]
 
     def get_tmp_dir_path(self):

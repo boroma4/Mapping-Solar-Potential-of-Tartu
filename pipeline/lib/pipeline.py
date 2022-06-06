@@ -6,15 +6,17 @@ import datetime
 
 from lib.util.path import PathUtil
 from lib.util.constants import *
+from lib.util.lod import Level
+from typing import Callable
 
 UPDATED_PREFIX = "updated-"
 
 
 class Pipeline:
-    def __init__(self, single_file_name=None) -> None:
+    def __init__(self, single_file_name: str=None) -> None:
         self.single_file_name = single_file_name
 
-    def process_files(self, level, processor):
+    def process_files(self, level: Level, processor: Callable):
         path_util = PathUtil(level)
         data_dir_path = path_util.get_data_dir_path()
 

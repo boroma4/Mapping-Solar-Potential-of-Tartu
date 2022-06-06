@@ -38,7 +38,7 @@ def area(poly):
     return abs(result / 2)
 
 
-def get_angles(normal):
+def get_angles(normal) -> tuple[float, float]:
     """Get the azimuth and altitude from the normal vector."""
     # -- Convert from polar system to azimuth
     azimuth = 90 - math.degrees(math.atan2(normal[1], normal[0]))

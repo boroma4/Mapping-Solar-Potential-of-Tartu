@@ -1,10 +1,11 @@
+from xml.etree.ElementTree import Element
 from lib.util.constants import *
 from pyproj import Proj, transform
 from lib.citygml.surface import Surface
 
 
 class Building:
-    def __init__(self, id, xml_building):
+    def __init__(self, id: str, xml_building: Element):
         self.id = id
         self.xml_building = xml_building
 

@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import xml.etree.ElementTree as ET
@@ -9,10 +8,13 @@ from lib.pipeline import Pipeline, UPDATED_PREFIX
 from lib.solar_potential.pvgis_api import PvgisRequestBuilder, make_empty_response
 from lib.util.decorators import timed
 from lib.util import file_util
+from lib.util.lod import Level
+from lib.util.path import PathUtil
+
 
 
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level, pv_efficiency, pv_loss, roof_coverage, optimize_2d, output_format):
+    def run(self, level: Level, pv_efficiency: float, pv_loss: float, roof_coverage: float, optimize_2d: bool, output_format: str) -> None:
         logging.info("Running Solar Potential pipeline")
         self.pv_efficiency = pv_efficiency
         self.pv_loss = pv_loss
@@ -22,7 +24,7 @@ class SolarPotentialPipeline(Pipeline):
 
         self.process_files(level, self.process_city_gml_file)
 
-    def process_city_gml_file(self, tree, path_util, filename):
+    def process_city_gml_file(self, tree: ET.ElementTree, path_util: PathUtil, filename: str) -> None:
         self.path_util = path_util
         buildings = tree.getroot().findall(f"{CORE}cityObjectMember")
         attribute_map = self.__get_building_attributes(buildings)
@@ -50,7 +52,7 @@ class SolarPotentialPipeline(Pipeline):
         logging.info(f'Output files can be located at {output_dir_path}')
 
     @timed("Building analysis")
-    def __get_building_attributes(self, buildings):
+    def __get_building_attributes(self, buildings: list[ET.Element]) -> dict:
         count_total = len(buildings)
         count_processed = 0
         count_no_roofs = 0
@@ -127,7 +129,7 @@ class SolarPotentialPipeline(Pipeline):
         return attribute_map
 
     @timed("Estimating solar potential through PVGIS requests")
-    def __add_solar_potential_to_attribute_map(self, attribute_map):
+    def __add_solar_potential_to_attribute_map(self, attribute_map: dict) -> dict:
         logging.info("Obtaining solar potential from PVGIS API")
         payload_map = {}
 
@@ -200,7 +202,7 @@ class SolarPotentialPipeline(Pipeline):
 
     # Calculates estimated monthly and yearly energy production for the whole city
 
-    def __calculate_city_solar_stats(self, attribute_map):
+    def __calculate_city_solar_stats(self, attribute_map: dict) -> dict:
         output = {}
         total_yearly = 0
         total_monthly = [0] * 12
@@ -216,7 +218,7 @@ class SolarPotentialPipeline(Pipeline):
         return output
 
     @timed("Updating the XML tree with solar data")
-    def __write_solar_output_to_tree(self, buildings, attribute_map):
+    def __write_solar_output_to_tree(self, buildings: list[ET.Element], attribute_map: dict) -> None:
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
             roofs_pv = attribute_map[id]["roofs_pv_list"]
@@ -238,18 +240,18 @@ class SolarPotentialPipeline(Pipeline):
                 ["optimized-power", "doubleAttribute", oriented_power[NONE]],
             ])
 
-    def __send_pvgis_api_requests(self):
+    def __send_pvgis_api_requests(self) -> None:
         logging.info("Running batch-pvgis-requests.mjs")
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
             raise Exception(f"{js_script_path} failed!")
 
-    def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path):
+    def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path) -> None:
         if self.output_format == "tiles":
             self.__convert_to_3d_tiles(city_gml_file_path, output_dir_path)
 
-    def __convert_to_3d_tiles(self, processed_gml_path, output_dir_path):
+    def __convert_to_3d_tiles(self, processed_gml_path, output_dir_path) -> None:
         logging.info("Converting CityGML to 3D tiles")
         logging.info("Running convert.mjs")
         js_script_path = self.path_util.get_js_script('convert.mjs')
@@ -258,7 +260,7 @@ class SolarPotentialPipeline(Pipeline):
 
             raise Exception(f"{js_script_path} failed!")
 
-    def __update_tree(self, xml_building, attribs):
+    def __update_tree(self, xml_building: ET.Element, attribs: list[tuple[str, str, str]]) -> None:
         gen = "ns3"
 
         for name, type, value in attribs:
@@ -267,6 +269,6 @@ class SolarPotentialPipeline(Pipeline):
             xml_value = ET.SubElement(xml_tag, f'{gen}:value')
             xml_value.text = str(value)
 
-    def extract_integer_id(self, string_id):
+    def extract_integer_id(self, string_id: str) -> str:
         subparts = string_id.split("_")
         return subparts[1]
