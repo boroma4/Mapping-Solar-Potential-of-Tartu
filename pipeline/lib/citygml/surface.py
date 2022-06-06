@@ -28,7 +28,7 @@ class Surface:
         is_floor = all([point[2] == z_min for point in self.points])
 
         return is_tilted and not is_floor
-    
+
     def angles(self):
         return self.tilt, self.azimuth
 

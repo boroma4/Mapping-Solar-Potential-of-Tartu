@@ -1,4 +1,4 @@
-# CITY GML 
+# CITY GML
 CORE = "{http://www.opengis.net/citygml/2.0}"
 GML = "{http://www.opengis.net/gml}"
 GEN = "{http://www.opengis.net/citygml/generics/2.0}"
@@ -12,5 +12,5 @@ WEST = "west"
 EAST = "east"
 NONE = "none"
 
-#MISC
+# MISC
 FLAT_SURFACE_MAX_TILT = 10

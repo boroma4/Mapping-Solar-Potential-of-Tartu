@@ -78,7 +78,11 @@ class SolarPotentialPipeline(Pipeline):
                     continue
 
                 count_roofs += 1
-                roof_attribs = {"area": surface.area, "azimuth": surface.azimuth, "tilt": surface.tilt, "orientation": surface.orientation}
+                roof_attribs = {
+                    "area": surface.area,
+                    "azimuth": surface.azimuth,
+                    "tilt": surface.tilt,
+                    "orientation": surface.orientation}
 
                 # handling duplicated points
                 if roof_attribs not in attribute_map[building_id]["roofs"]:
@@ -108,8 +112,8 @@ class SolarPotentialPipeline(Pipeline):
                 ["north-area", "doubleAttribute", north_roof_area],
                 ["south-area", "doubleAttribute", south_roof_area],
                 ["west-area", "doubleAttribute", west_roof_area],
-                ["east-area", "doubleAttribute", east_roof_area], 
-                ["flat-area", "doubleAttribute", flat_roof_area], 
+                ["east-area", "doubleAttribute", east_roof_area],
+                ["flat-area", "doubleAttribute", flat_roof_area],
                 ["etak_id", "stringAttribute", building_id]])
 
             count_processed += 1
@@ -191,7 +195,9 @@ class SolarPotentialPipeline(Pipeline):
                     roof_pv_data["totals"]["fixed"]["E_m_exact"].append(monthly_power)
 
             # shrink the dict a bit
-            roofs_pv_list = [data["totals"]["fixed"] | {"orientation": data["orientation"]} for data in pv_data[building_id]]
+            roofs_pv_list = [
+                data["totals"]["fixed"] | {
+                    "orientation": data["orientation"]} for data in pv_data[building_id]]
 
             # In case yearly energy is None
             for roof_pv in roofs_pv_list:
@@ -224,12 +230,16 @@ class SolarPotentialPipeline(Pipeline):
             id = self.extract_integer_id(xml_building[0].attrib[ID])
             roofs_pv = attribute_map[id]["roofs_pv_list"]
             total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv]), 3)
-            north_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == NORTH]), 3)
-            south_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == SOUTH]), 3)
-            west_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == WEST]), 3)
-            east_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == EAST]), 3)
-            optimized_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == NONE]), 3)
-
+            north_yearly_power = round(sum([roof_pv["E_y"]
+                                       for roof_pv in roofs_pv if roof_pv["orientation"] == NORTH]), 3)
+            south_yearly_power = round(sum([roof_pv["E_y"]
+                                       for roof_pv in roofs_pv if roof_pv["orientation"] == SOUTH]), 3)
+            west_yearly_power = round(sum([roof_pv["E_y"]
+                                      for roof_pv in roofs_pv if roof_pv["orientation"] == WEST]), 3)
+            east_yearly_power = round(sum([roof_pv["E_y"]
+                                      for roof_pv in roofs_pv if roof_pv["orientation"] == EAST]), 3)
+            optimized_yearly_power = round(sum([roof_pv["E_y"]
+                                           for roof_pv in roofs_pv if roof_pv["orientation"] == NONE]), 3)
 
             self.__update_tree(xml_building, [
                 ["power", "doubleAttribute", total_yearly_power],
