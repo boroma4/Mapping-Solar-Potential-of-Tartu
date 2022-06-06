@@ -21,7 +21,7 @@ function Dashboard () {
             {
             !pvData  
             ? 
-                "Loading..."
+                "Loading dashboard..."
             : 
                 <div>
                     <CityStats pvData={pvData}/>

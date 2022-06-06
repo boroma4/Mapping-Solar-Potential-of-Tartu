@@ -1,11 +1,12 @@
 import { Viewer, Cesium3DTileset, CesiumComponentRef } from "resium";
 import { Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion } from "cesium";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { yearlyPowerLegendKwh } from "../utils/YearlyPowerLegend";
 
 Ion.defaultAccessToken=import.meta.env.VITE_CESIUM_ION_TOKEN;
 
 function Map() {
+    const [isLoading, setIsLoading] = useState(true);
     const ref = useRef<CesiumComponentRef<CesiumViewer>>(null);
     let viewer: CesiumViewer;
     
@@ -23,6 +24,7 @@ function Map() {
     }
 
     const handleReady = async (tileset: Tileset)  => {
+      setIsLoading(false);
       const conditions = createColorConditions();
       tileset.style = new Cesium3DTileStyle({
           color : {
@@ -36,13 +38,16 @@ function Map() {
     };
 
   return (
-    <Viewer ref={ref} timeline={false} animation={false} className="left-container">
-      <Cesium3DTileset url={"/tileset.json"} 
-        onReady={handleReady} 
-        cullRequestsWhileMoving={false} 
-        cullWithChildrenBounds={false}
-        />
-    </Viewer>
+    <div>
+      {isLoading ? <div> Loading 3D buildings... </div> : <></>}
+      <Viewer ref={ref} timeline={false} animation={false} className="left-container">
+        <Cesium3DTileset url={"/tileset.json"} 
+          onReady={handleReady} 
+          cullRequestsWhileMoving={false} 
+          cullWithChildrenBounds={false}
+          />
+      </Viewer>
+    </div>
   );
 }
 
