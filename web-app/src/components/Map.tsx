@@ -24,7 +24,6 @@ function Map() {
     }
 
     const handleReady = async (tileset: Tileset)  => {
-      setIsLoading(false);
       const conditions = createColorConditions();
       tileset.style = new Cesium3DTileStyle({
           color : {
@@ -43,6 +42,7 @@ function Map() {
       <Viewer ref={ref} timeline={false} animation={false} className="left-container">
         <Cesium3DTileset url={"/tileset.json"} 
           onReady={handleReady} 
+          onTileVisible={() => setIsLoading(false)}
           cullRequestsWhileMoving={false} 
           cullWithChildrenBounds={false}
           />
