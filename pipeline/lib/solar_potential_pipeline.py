@@ -12,9 +12,9 @@ from lib.util.lod import Level
 from lib.util.path import PathUtil
 
 
-
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level: Level, pv_efficiency: float, pv_loss: float, roof_coverage: float, optimize_2d: bool, output_format: str) -> None:
+    def run(self, level: Level, pv_efficiency: float, pv_loss: float,
+            roof_coverage: float, optimize_2d: bool, output_format: str) -> None:
         logging.info("Running Solar Potential pipeline")
         self.pv_efficiency = pv_efficiency
         self.pv_loss = pv_loss
@@ -96,7 +96,6 @@ class SolarPotentialPipeline(Pipeline):
 
             building_attributes = attribute_map[building_id]
             roofs = building_attributes["roofs"]
-
 
             total_roof_area = round(sum([roof["area"] for roof in roofs]), 3)
             oriented_areas = {}
@@ -229,7 +228,6 @@ class SolarPotentialPipeline(Pipeline):
             for orientation in ORIENTATIONS:
                 power_list = [roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == orientation]
                 oriented_power[orientation] = round(sum(power_list), 3)
-
 
             self.__update_tree(xml_building, [
                 ["power", "doubleAttribute", total_yearly_power],

@@ -13,7 +13,7 @@ UPDATED_PREFIX = "updated-"
 
 
 class Pipeline:
-    def __init__(self, single_file_name: str=None) -> None:
+    def __init__(self, single_file_name: str = None) -> None:
         self.single_file_name = single_file_name
 
     def process_files(self, level: Level, processor: Callable):
