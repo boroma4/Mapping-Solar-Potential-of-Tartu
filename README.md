@@ -9,26 +9,23 @@ It was designed to work with the data from [Estonian Land Board](https://geoport
 Currently the [PVGIS API](https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-information-system/getting-started-pvgis/api-non-interactive-service_en
 ) is used as a backend for estimating solar power, in the future this might change to a ML model.
 
+## Demo
+
+Available at http://172.17.66.102:3000/ (UT network).
+
 ## Setup
 
-Please use `setup.sh` script to install needed environment.
+Please find setup scripts in `scripts/<os>/` to install needed environment. !Full-setup is meant to be used for clean machines.
 
 ## Running the pipeline
 
-Please take a look at `tartu.sh` script which should give you an idea how to run the estimation pipeline.
+Please use `./scripts/<os>/run-pipe.sh <filename>` to run the pipeline with default parameters. Feel free to modify it for your needs.
 
 Run `python3 pipeline/main.py --help` to see the full list of parameters supported and their descriptions.
 
 ## Running the web app
 
-Currently the web app can only be ran locally. Please place the output files from the pipeline in the `web-app/public` and then run `client.sh` script.
-
-## Tech stack 
-* Python 3
-* Node.js 
-* React
-* Cesium
-* Vite
+After running the pipeline run `./scripts/web.sh` to launch the web app.
 
 ## Requirements
 * Python 3.9+
