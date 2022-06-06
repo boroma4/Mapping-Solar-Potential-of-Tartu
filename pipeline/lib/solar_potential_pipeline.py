@@ -8,7 +8,7 @@ from lib.util.constants import *
 from lib.pipeline import Pipeline, UPDATED_PREFIX
 from lib.solar_potential.pvgis_api import PvgisRequestBuilder, make_empty_response
 from lib.util.decorators import timed
-from lib.util.file_size import get_file_size_mb
+from lib.util import file_util
 
 
 class SolarPotentialPipeline(Pipeline):
@@ -41,8 +41,8 @@ class SolarPotentialPipeline(Pipeline):
         tree.write(processed_file_path)
 
         logging.info("Wrtiting results to JSON files")
-        self.__write_city_attributes_json(attribute_map, output_dir_path)
-        self.__write_city_pv_json(pv_output_map, output_dir_path)
+        file_util.write_json(attribute_map, output_dir_path, "city-attributes.json")
+        file_util.write_json(pv_output_map, output_dir_path, "city-pv.json")
 
         # Converting CityGML to visualizable format
         self.__convert_citygml_to_output_format(processed_file_path, output_dir_path)
@@ -95,25 +95,25 @@ class SolarPotentialPipeline(Pipeline):
             building_attributes = attribute_map[building_id]
             roofs = building_attributes["roofs"]
 
-            total_roof_area = round(sum([roof["area"] for roof in roofs]), 3)
-            north_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == NORTH]), 3)
-            south_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == SOUTH]), 3)
-            west_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == WEST]), 3)
-            east_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == EAST]), 3)
-            flat_roof_area = round(sum([roof["area"] for roof in roofs if roof["orientation"] == NONE]), 3)
 
+            total_roof_area = round(sum([roof["area"] for roof in roofs]), 3)
+            oriented_areas = {}
             lat, lon = building.get_approx_lat_lon()
+
+            for orientation in ORIENTATIONS:
+                areas = [roof["area"] for roof in roofs if roof["orientation"] == orientation]
+                oriented_areas[orientation] = round(sum(areas), 3)
 
             building_attributes["total_roof_area"] = round(total_roof_area, 2)
             building_attributes["lat"] = lat
             building_attributes["lon"] = lon
             self.__update_tree(xml_building, [
                 ["area", "doubleAttribute", total_roof_area],
-                ["north-area", "doubleAttribute", north_roof_area],
-                ["south-area", "doubleAttribute", south_roof_area],
-                ["west-area", "doubleAttribute", west_roof_area],
-                ["east-area", "doubleAttribute", east_roof_area],
-                ["flat-area", "doubleAttribute", flat_roof_area],
+                ["north-area", "doubleAttribute", oriented_areas[NORTH]],
+                ["south-area", "doubleAttribute", oriented_areas[SOUTH]],
+                ["west-area", "doubleAttribute", oriented_areas[WEST]],
+                ["east-area", "doubleAttribute", oriented_areas[EAST]],
+                ["flat-area", "doubleAttribute", oriented_areas[NONE]],
                 ["etak_id", "stringAttribute", building_id]])
 
             count_processed += 1
@@ -163,21 +163,12 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Storing requests data to be processed by Node.js script")
 
         tmp_dir_path = self.path_util.get_tmp_dir_path()
-        requests_json_path = tmp_dir_path + "/requests.json"
-
-        with open(requests_json_path, 'w') as fp:
-            json.dump(payload_map, fp)
-            logging.info(f"File created: {requests_json_path}")
+        file_util.write_json(payload_map, tmp_dir_path, "requests.json")
 
         # calls the Node.js script which saves results to a new json file
         self.__send_pvgis_api_requests()
 
-        responses_json_path = tmp_dir_path + "/responses.json"
-        json_file_size_mb = get_file_size_mb(responses_json_path)
-        logging.info(f"Responses JSON is {json_file_size_mb} MB")
-
-        with open(responses_json_path, 'r') as fp:
-            pv_data = json.loads(fp.read())
+        pv_data = file_util.read_json(tmp_dir_path, "responses.json")
 
         # Processing API results for each roof of each building
         for building_id in attribute_map.keys():
@@ -229,25 +220,22 @@ class SolarPotentialPipeline(Pipeline):
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
             roofs_pv = attribute_map[id]["roofs_pv_list"]
+
             total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv]), 3)
-            north_yearly_power = round(sum([roof_pv["E_y"]
-                                       for roof_pv in roofs_pv if roof_pv["orientation"] == NORTH]), 3)
-            south_yearly_power = round(sum([roof_pv["E_y"]
-                                       for roof_pv in roofs_pv if roof_pv["orientation"] == SOUTH]), 3)
-            west_yearly_power = round(sum([roof_pv["E_y"]
-                                      for roof_pv in roofs_pv if roof_pv["orientation"] == WEST]), 3)
-            east_yearly_power = round(sum([roof_pv["E_y"]
-                                      for roof_pv in roofs_pv if roof_pv["orientation"] == EAST]), 3)
-            optimized_yearly_power = round(sum([roof_pv["E_y"]
-                                           for roof_pv in roofs_pv if roof_pv["orientation"] == NONE]), 3)
+            oriented_power = {}
+
+            for orientation in ORIENTATIONS:
+                power_list = [roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == orientation]
+                oriented_power[orientation] = round(sum(power_list), 3)
+
 
             self.__update_tree(xml_building, [
                 ["power", "doubleAttribute", total_yearly_power],
-                ["north-power", "doubleAttribute", north_yearly_power],
-                ["south-power", "doubleAttribute", south_yearly_power],
-                ["west-power", "doubleAttribute", west_yearly_power],
-                ["east-power", "doubleAttribute", east_yearly_power],
-                ["optimized-power", "doubleAttribute", optimized_yearly_power],
+                ["north-power", "doubleAttribute", oriented_power[NORTH]],
+                ["south-power", "doubleAttribute", oriented_power[SOUTH]],
+                ["west-power", "doubleAttribute", oriented_power[WEST]],
+                ["east-power", "doubleAttribute", oriented_power[EAST]],
+                ["optimized-power", "doubleAttribute", oriented_power[NONE]],
             ])
 
     def __send_pvgis_api_requests(self):
@@ -256,26 +244,6 @@ class SolarPotentialPipeline(Pipeline):
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
             raise Exception(f"{js_script_path} failed!")
-
-    def __write_city_attributes_json(self, attribute_map, output_dir_path):
-        json_name = "city-attributes.json"
-        json_path = os.path.join(output_dir_path, json_name)
-
-        with open(json_path, 'w') as fp:
-            json.dump(attribute_map, fp)
-
-        json_file_size_mb = get_file_size_mb(json_path)
-        logging.info(f"City attributes JSON is {json_file_size_mb} MB")
-
-    def __write_city_pv_json(self, pv_output_map, output_dir_path):
-        json_name = "city-pv.json"
-        json_path = os.path.join(output_dir_path, json_name)
-
-        with open(json_path, 'w') as fp:
-            json.dump(pv_output_map, fp)
-
-        json_file_size_mb = get_file_size_mb(json_path)
-        logging.info(f"City PV stats JSON is {json_file_size_mb} MB")
 
     def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path):
         if self.output_format == "tiles":
