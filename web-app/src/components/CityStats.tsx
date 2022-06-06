@@ -13,8 +13,8 @@ function CityStats ({ pvData }: Props) {
 
     return(
         <div>
-            <h4>City name: </h4> 
-            <p>Tartu</p>
+            <h4>From file: </h4> 
+            <p>{pvData.file}</p>
             <h4>Total yearly power output: </h4>
             <p>
             { adjustYearlyEnergy() } 
