@@ -1,5 +1,6 @@
 import React from "react";
 import Select from 'react-select'
+import { capitalizeFirstLetter } from "../utils/CapitalizeFirstLetter";
 
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 const CitySelector = ({cities, setCity}: Props) => {
     const makeOptions = () => {
         return cities.map((city) => {
-            return {value: city, label: city};
+            return {value: city, label: capitalizeFirstLetter(city)};
         })
     }
 
