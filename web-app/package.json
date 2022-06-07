@@ -7,7 +7,7 @@
     "start": "vite --host",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint src/**/** --fix",
+    "lint": "npx eslint --config .eslintrc.json --fix src/**/*",
     "preprocess": "node scripts/preprocessor.mjs"
   },
   "dependencies": {

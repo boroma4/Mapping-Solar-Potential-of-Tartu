@@ -109,13 +109,13 @@ class SolarPotentialPipeline(Pipeline):
             building_attributes["lat"] = lat
             building_attributes["lon"] = lon
             self.__update_tree(xml_building, [
+                ["etak_id", "stringAttribute", building_id],
                 ["area", "doubleAttribute", total_roof_area],
                 ["north-area", "doubleAttribute", oriented_areas[NORTH]],
                 ["south-area", "doubleAttribute", oriented_areas[SOUTH]],
                 ["west-area", "doubleAttribute", oriented_areas[WEST]],
                 ["east-area", "doubleAttribute", oriented_areas[EAST]],
-                ["flat-area", "doubleAttribute", oriented_areas[NONE]],
-                ["etak_id", "stringAttribute", building_id]])
+                ["flat-area", "doubleAttribute", oriented_areas[NONE]]])
 
             count_processed += 1
             if count_processed % 5000 == 0:
