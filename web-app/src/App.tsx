@@ -1,3 +1,4 @@
+import React from "react";
 import Dashboard from "./components/Dashboard";
 import Map from "./components/Map";
 import "./App.css";
