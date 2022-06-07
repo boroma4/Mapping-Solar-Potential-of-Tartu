@@ -1,14 +1,18 @@
 import React from 'react';
 import { Viewer, Cesium3DTileset, CesiumComponentRef } from 'resium';
 import {
-  Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion,
+  Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion, Cartesian3
 } from 'cesium';
 import { useEffect, useRef, useState } from 'react';
 import { yearlyPowerLegendKwh } from '../utils/YearlyPowerLegend';
 
 Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
 
-function Map() {
+interface Props {
+  city: string;
+}
+
+function Map({city}: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const ref = useRef<CesiumComponentRef<CesiumViewer>>(null);
   let viewer: CesiumViewer;
@@ -42,7 +46,7 @@ function Map() {
       {isLoading ? <div> Loading 3D buildings... </div> : <></>}
       <Viewer ref={ref} timeline={false} animation={false} className="left-container">
         <Cesium3DTileset
-          url="/tileset.json"
+          url={`../../cities/${city}/tileset.json`}
           onReady={handleReady}
           onTileVisible={() => setIsLoading(false)}
           cullRequestsWhileMoving={false}

@@ -24,8 +24,5 @@ dist-ssr
 *.sw?
 
 # 3D model of the city
-public/full.b3dm
-public/tileset.json
-public/city-pv.json
-public/city-attributes.json
-public/*.gml
+cities/*
+!cities/PLACEHOLDER

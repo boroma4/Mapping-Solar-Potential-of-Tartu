@@ -10,11 +10,15 @@ import BuildingColorLegend from './BuildingColorLegend';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-function Dashboard() {
+interface Props {
+  city: string;
+}
+
+function Dashboard({city}: Props) {
   const [pvData, setPvData] = useState<CityPvInput>();
 
   useEffect(() => {
-    import('../../public/city-pv.json').then((loadedPvData: object) => {
+    import(`../../cities/${city}/city-pv.json`).then((loadedPvData: object) => {
       setPvData(loadedPvData as CityPvInput);
     });
   }, []);

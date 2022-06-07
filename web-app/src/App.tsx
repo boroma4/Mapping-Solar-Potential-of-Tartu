@@ -1,14 +1,22 @@
-import React from "react";
-import Dashboard from "./components/Dashboard";
-import Map from "./components/Map";
+import React, { useState } from "react";
 import "./App.css";
+import cities from "../cities/meta.json";
+import CitySelector from "./components/CitySelector";
+import MapPage from "./pages/MapPage";
+import MainPage from "./pages/MainPage";
 
 function App() {
+  const [city, setCity] = useState("");
   return (
-    <div className="main-container">
-      <Map/>
-      <Dashboard/>
-    </div>
+    <>
+      {
+        city 
+        ?
+          <MapPage city={city} />
+        : 
+          <MainPage cities={cities.list} setCity={setCity} />
+        }
+    </>
   );
 }
 
