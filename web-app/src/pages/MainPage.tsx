@@ -9,7 +9,7 @@ interface Props {
 export default function MainPage({cities, setCity}: Props) {
   return (
     <div className={"center-content"} style={{backgroundColor: "#C2B280"}}>
-        <h2> Estonian Solar Potential Project</h2>
+        <h2> Estonia Solar Potential Project</h2>
         <h5> Please choose a city </h5>
         <CitySelector cities={cities} setCity={setCity} />
     </div>

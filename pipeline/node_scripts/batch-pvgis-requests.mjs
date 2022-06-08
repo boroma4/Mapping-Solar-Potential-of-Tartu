@@ -38,7 +38,7 @@ const processRequests = async (requestDataList) => {
     let batchesDone = 0;
     const countTotal = Object.values(requestDataList).reduce((acc, currentArray) => acc + currentArray.length, 0);
     const numBatches = Math.ceil(countTotal / BATCH_LIMIT);
-    console.log("Sending requests to PVGIS API in batches, batch size: " + BATCH_LIMIT)
+    console.log(`Sending requests to PVGIS API in batches, batch size: ${BATCH_LIMIT}, number of batches: ${numBatches}`);
 
     for (const id of Object.keys(requestDataList)) {
         const roofRequestList = requestDataList[id];

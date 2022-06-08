@@ -35,7 +35,7 @@ def configure_parser():
         type=float,
         default=0.90)
     parser.add_argument(
-        "--optimize-2d",
+        "--optimize-2d-map",
         help="optimize the buildings to have the floor at z = 0",
         type=bool,
         default=True)
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     pv_efficiency = args.pv_efficiency
     pv_loss = args.pv_loss
     roof_coverage = args.roof_coverage
-    optimize_2d = args.optimize_2d
+    optimize_2d_map = args.optimize_2d_map
     output_format = args.output_format
 
     lods = {
@@ -70,5 +70,5 @@ if __name__ == "__main__":
         pv_efficiency,
         pv_loss,
         roof_coverage,
-        optimize_2d,
+        optimize_2d_map,
         output_format)

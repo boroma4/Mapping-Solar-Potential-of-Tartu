@@ -8,7 +8,7 @@ interface Props {
 
 export default function MapPage({city}: Props) {
   return (
-    <div className="main-container">
+    <div className="flex-container">
         <Map city={city}/>
         <Dashboard city={city}/>
     </div>

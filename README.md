@@ -25,7 +25,8 @@ Run `python3 pipeline/main.py --help` to see the full list of parameters support
 
 ## Running the web app
 
-After running the pipeline run `./scripts/web.sh` to launch the web app.
+After running the pipeline run `./scripts/web.sh` to launch the web app. 
+Please do not run the app directly as there is an important preprocessing step done in the script.
 
 ## Requirements
 * Python 3.9+
