@@ -13,16 +13,19 @@ from lib.util.path import PathUtil
 
 
 class SolarPotentialPipeline(Pipeline):
-    def run(self, level: Level, pv_efficiency: float, pv_loss: float,
-            roof_coverage: float, optimize_2d: bool, output_format: str) -> None:
-        logging.info("Running Solar Potential pipeline")
+    def __init__(self, single_file_name: str, level: Level, pv_efficiency: float, pv_loss: float, roof_coverage: float, optimize_2d: bool, output_format: str, node_ram_limit: int) -> None:
+        super().__init__(single_file_name)
+        self.level = level
         self.pv_efficiency = pv_efficiency
         self.pv_loss = pv_loss
         self.roof_coverage = roof_coverage
         self.optimize_2d = optimize_2d
         self.output_format = output_format
+        self.node_ram_limit = node_ram_limit
 
-        self.process_files(level, self.process_city_gml_file)
+    def run(self) -> None:
+        logging.info("Running Solar Potential pipeline")
+        self.process_files(self.level, self.process_city_gml_file)
 
     def process_city_gml_file(self, tree: ET.ElementTree, path_util: PathUtil, filename: str) -> None:
         self.path_util = path_util
@@ -254,7 +257,7 @@ class SolarPotentialPipeline(Pipeline):
         logging.info("Running convert.mjs")
         js_script_path = self.path_util.get_js_script('convert.mjs')
         if os.system(
-                f"NODE_OPTIONS=--max-old-space-size=10000 node {js_script_path} {processed_gml_path} {output_dir_path}/") != 0:
+                f"NODE_OPTIONS=--max-old-space-size={self.node_ram_limit} node {js_script_path} {processed_gml_path} {output_dir_path}/") != 0:
 
             raise Exception(f"{js_script_path} failed!")
 
