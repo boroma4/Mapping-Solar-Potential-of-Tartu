@@ -11,7 +11,7 @@ Currently the [PVGIS API](https://joint-research-centre.ec.europa.eu/pvgis-photo
 
 ## Demo
 
-Available at http://172.17.66.102:3000/ (UT network).
+Available at http://172.17.65.121:3000/ (UT network).
 
 ## Setup
 
