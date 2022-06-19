@@ -34,7 +34,7 @@ class Surface:
         return self.tilt, self.azimuth
 
     def __get_orientation(self):
-        if self.tilt <= FLAT_SURFACE_MAX_TILT:
+        if self.tilt <= MAX_FLAT_SURFACE_TILT:
             return NONE
         if -45 <= self.azimuth <= 45:
             return SOUTH

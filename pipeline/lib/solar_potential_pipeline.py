@@ -158,7 +158,7 @@ class SolarPotentialPipeline(Pipeline):
                     .set_azimuth(roof["azimuth"])
 
                 # Uses best possible angles becacuse it should be easy to adjust those on a flat-ish roof
-                if roof["tilt"] <= FLAT_SURFACE_MAX_TILT:
+                if roof["tilt"] <= MAX_FLAT_SURFACE_TILT:
                     request_builder.optimize_angles()
 
                 request_data = [orientation, request_builder.get_payload()]
@@ -241,16 +241,17 @@ class SolarPotentialPipeline(Pipeline):
                 ["optimized-power", "doubleAttribute", oriented_power[NONE]],
             ])
 
+    @timed("Converting CityGML to another format")
+    def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path) -> None:
+        if self.output_format == "tiles":
+            self.__convert_to_3d_tiles(city_gml_file_path, output_dir_path)
+
     def __send_pvgis_api_requests(self) -> None:
         logging.info("Running batch-pvgis-requests.mjs")
         tmp_dir_path = self.path_util.get_tmp_dir_path()
         js_script_path = self.path_util.get_js_script('batch-pvgis-requests.mjs')
         if os.system(f"node {js_script_path} {tmp_dir_path}") != 0:
             raise Exception(f"{js_script_path} failed!")
-
-    def __convert_citygml_to_output_format(self, city_gml_file_path, output_dir_path) -> None:
-        if self.output_format == "tiles":
-            self.__convert_to_3d_tiles(city_gml_file_path, output_dir_path)
 
     def __convert_to_3d_tiles(self, processed_gml_path, output_dir_path) -> None:
         logging.info("Converting CityGML to 3D tiles")
