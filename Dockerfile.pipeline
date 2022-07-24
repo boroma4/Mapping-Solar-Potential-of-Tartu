@@ -1,0 +1,19 @@
+FROM python:3.9
+
+WORKDIR /app
+COPY /data /app/data
+COPY /pipeline /app/pipeline
+
+RUN apt-get update;
+
+# Install Node
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt -y install nodejs;
+
+# Python deps
+RUN pip install -r pipeline/requirements.txt;
+
+# Node deps
+RUN cd pipeline/node_scripts && npm i;
+
+
+ENTRYPOINT ["python", "pipeline/main.py"]

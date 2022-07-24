@@ -1,0 +1,20 @@
+FROM node:16
+
+WORKDIR /app
+COPY /web-app /app/web-app
+COPY /data /app/data
+
+EXPOSE 3000
+
+RUN apt-get update;
+
+# Install Node
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt -y install nodejs;
+
+WORKDIR /app/web-app
+
+# Node deps
+RUN npm i;
+
+
+CMD ["npm", "run", "start-full"]

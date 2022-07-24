@@ -23,10 +23,25 @@ Please use `./scripts/<os>/run-pipe.sh <filename>` to run the pipeline with defa
 
 Run `python3 pipeline/main.py --help` to see the full list of parameters supported and their descriptions.
 
-## Running the web app
+### Running from Docker
+
+```
+docker build -t pipeline -f Dockerfile.pipeline .
+docker run -pipeline --filename delta.gml
+```
+
+
+## Running the web app (automatically uses LOD2 data from /data/lod2)
 
 After running the pipeline run `./scripts/web.sh` to launch the web app. 
 Please do not run the app directly as there is an important preprocessing step done in the script.
+
+### Running from Docker
+
+```
+docker build -t web -f Dockerfile.web .
+docker run -p 3000:3000 web
+```
 
 ## Requirements
 * Python 3.9+

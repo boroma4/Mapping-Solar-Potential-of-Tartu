@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "npx eslint --config .eslintrc.json --fix src/**/*",
-    "preprocess": "node scripts/preprocessor.mjs"
+    "preprocess": "node scripts/preprocessor.mjs",
+    "start-full" : "npm run preprocess && npm start"
   },
   "dependencies": {
     "cesium": "^1.92.0",
