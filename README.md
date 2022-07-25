@@ -40,11 +40,10 @@ Please do not run the app directly as there is an important preprocessing step d
 
 ### Running from Docker
 
-Prerequisite: allow mounting of the data folder to Docker containers.
 
 ```
 docker build -t web -f Dockerfile.web .
-docker run -v <full-path-to-repo>/data:/app/data -p 3000:3000 web
+docker run -p 3000:3000 web
 ```
 
 ## Requirements
