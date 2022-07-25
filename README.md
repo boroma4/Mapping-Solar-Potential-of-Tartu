@@ -13,9 +13,9 @@ Currently the [PVGIS API](https://joint-research-centre.ec.europa.eu/pvgis-photo
 
 Available at http://172.17.65.121:3000/ (UT network).
 
-## Setup
+## Local setup
 
-Please find setup scripts in `scripts/<os>/` to install needed environment. !Full-setup is meant to be used for clean machines.
+Please find setup scripts in `scripts/<os>/` to install needed environment. Full-setup is meant to be used for clean machines.
 
 ## Running the pipeline
 
@@ -25,9 +25,11 @@ Run `python3 pipeline/main.py --help` to see the full list of parameters support
 
 ### Running from Docker
 
+Prerequisite: allow mounting of the data folder to Docker containers.
+
 ```
 docker build -t pipeline -f Dockerfile.pipeline .
-docker run -pipeline --filename delta.gml
+docker run -v <full-path-to-repo>/data:/app/data pipeline --filename delta.gml --<other-param> <other-value>
 ```
 
 
@@ -38,9 +40,11 @@ Please do not run the app directly as there is an important preprocessing step d
 
 ### Running from Docker
 
+Prerequisite: allow mounting of the data folder to Docker containers.
+
 ```
 docker build -t web -f Dockerfile.web .
-docker run -p 3000:3000 web
+docker run -v <full-path-to-repo>/data:/app/data -p 3000:3000 web
 ```
 
 ## Requirements
