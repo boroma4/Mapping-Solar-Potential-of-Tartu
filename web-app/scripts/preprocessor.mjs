@@ -34,5 +34,5 @@ const moveOutputsFromData = async() => {
   }
 }
 
-moveOutputsFromData();
+await moveOutputsFromData();
 writeMetadata();
