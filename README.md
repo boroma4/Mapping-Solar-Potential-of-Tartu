@@ -7,7 +7,7 @@ This project was developed as a prototype of a tool to visualize solar potential
 It was designed to work with the data from [Estonian Land Board](https://geoportaal.maaamet.ee/eng/Download-3D-data-p837.html).
 
 Currently the [PVGIS API](https://joint-research-centre.ec.europa.eu/pvgis-photovoltaic-geographical-information-system/getting-started-pvgis/api-non-interactive-service_en
-) is used as a backend for estimating solar power, in the future this might change to a ML model.
+) is used as a backend for estimating solar power, in the future this might change to another implementation.
 
 ## Demo
 
