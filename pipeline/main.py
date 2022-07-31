@@ -60,12 +60,13 @@ if __name__ == "__main__":
     node_ram_limit = args.node_ram_limit
 
     logging.info('Inputs:')
-    logging.info(f'Filename: ${specific_file_name}')
-    logging.info(f'LOD: ${lod_num}')
+    logging.info(f'==================================')
+    logging.info(f'Filename: {specific_file_name}')
+    logging.info(f'LOD: {lod_num}')
     logging.info(f'PV efficiency: {pv_efficiency}')
     logging.info(f'PV loss: {pv_loss}')
     logging.info(f'Roof coverage: {roof_coverage}')
-    logging.info(f'Optimize for 2D map: ${optimize_2d_map}')
+    logging.info(f'Optimize for 2D map: {optimize_2d_map}')
     logging.info(f'Output format: {output_format}')
     logging.info(f'Node RAM limit: {node_ram_limit} MB')
     logging.info(f'==================================')

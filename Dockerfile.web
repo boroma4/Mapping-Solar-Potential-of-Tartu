@@ -4,7 +4,7 @@ WORKDIR /app
 COPY /web-app /app/web-app
 COPY /data /app/data
 
-EXPOSE 3000
+EXPOSE 443
 
 RUN apt-get update;
 
