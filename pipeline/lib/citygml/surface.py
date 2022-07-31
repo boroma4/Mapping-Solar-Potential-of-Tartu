@@ -25,10 +25,10 @@ class Surface:
             self.points.append(current_points)
 
     def is_roof(self, z_min: float) -> bool:
-        is_tilted = self.tilt <= 60
+        is_wall = self.tilt == 90
         is_floor = all([point[2] == z_min for point in self.points])
 
-        return is_tilted and not is_floor
+        return not is_wall and not is_floor
 
     def angles(self):
         return self.tilt, self.azimuth
