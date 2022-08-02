@@ -6,7 +6,9 @@ import cesium from 'vite-plugin-cesium';
 export default defineConfig({
   plugins: [react(), cesium()],
   server: {
-    hmr: false,
+    hmr: {
+      port: 443
+    },
     strictPort: true
   }
 })
