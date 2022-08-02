@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "start": "vite --host --port 3000",
+    "dev": "vite --config vite.config.local.ts",
+    "start": "vite --host --port 3000 --config vite.config.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "npx eslint --config .eslintrc.json --fix src/**/*",
