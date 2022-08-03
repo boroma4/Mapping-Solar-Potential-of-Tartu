@@ -1,7 +1,7 @@
 import React from 'react';
 import { Viewer, Cesium3DTileset, CesiumComponentRef } from 'resium';
 import {
-  Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion, Cartesian3
+  Viewer as CesiumViewer, Cesium3DTileset as Tileset, Cesium3DTileStyle, Ion, Cartesian2, IntersectionTests, Ray
 } from 'cesium';
 import { useEffect, useRef, useState } from 'react';
 import { yearlyPowerLegendKwh } from '../utils/YearlyPowerLegend';
@@ -38,13 +38,22 @@ function Map({city}: Props) {
     if (viewer) {
       await viewer.zoomTo(tileset);
       viewer.camera.zoomIn(5000);
+      
+      // Rotate to prevent click unresponsiveness bug
+      const elmnt = document.getElementById("map");
+      const ellipsoid = viewer.scene.mapProjection.ellipsoid;
+      const windowCoordinates = new Cartesian2(elmnt!.offsetHeight / 2, elmnt!.offsetWidth / 2);
+      const ray = viewer.camera.getPickRay(windowCoordinates);
+      const intersection = IntersectionTests.rayEllipsoid(ray!, ellipsoid);
+      const intersectionPoint = Ray.getPoint(ray!, intersection.start);
+      viewer.camera.rotate(intersectionPoint, 0.7);
     }
   };
 
   return (
     <div>
       {isLoading ? <div> Loading 3D buildings... </div> : <></>}
-      <Viewer ref={ref} timeline={false} animation={false} className="left-container">
+      <Viewer id={'map'} ref={ref} timeline={false} animation={false} className="left-container">
         <Cesium3DTileset
           url={`../../cities/${city}/tileset.json`}
           onReady={handleReady}
