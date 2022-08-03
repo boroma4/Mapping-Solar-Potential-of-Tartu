@@ -40,7 +40,11 @@ def configure_parser():
         type=bool,
         default=True)
     parser.add_argument("--output-format", help="output type to convert CityGML files to (3Dtiles, ...)")
-    parser.add_argument("--node-ram-limit", help="Max amout of RAM in MB allowed to be used by Node.js, defaults to 5500", default=5500, type=int)
+    parser.add_argument(
+        "--node-ram-limit",
+        help="Max amout of RAM in MB allowed to be used by Node.js, defaults to 5500",
+        default=5500,
+        type=int)
 
     return parser
 
@@ -80,7 +84,7 @@ if __name__ == "__main__":
         raise Exception("Unsupported LOD")
 
     SolarPotentialPipeline(
-        specific_file_name, 
+        specific_file_name,
         lods[lod_num],
         pv_efficiency,
         pv_loss,

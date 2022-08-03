@@ -12,21 +12,6 @@ MANDATORY_FIELDS = [
 ]
 
 
-# variables:
-# 'E_d': {'description': 'Average daily energy production from the given system', 'units': 'kWh/d'},
-# 'E_m': {'description': 'Average monthly energy production from the given system', 'units': 'kWh/mo'},
-# 'E_y': {'description': 'Average annual energy production from the given system', 'units': 'kWh/y'},
-# 'H(i)_d': {'description': 'Average daily sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/d'},
-# 'H(i)_m': {'description': 'Average monthly sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/mo'},
-# 'H(i)_y': {'description': 'Average annual sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/y'},
-# 'SD_m': {'description': 'Standard deviation of the monthly energy production due to year-to-year variation', 'units': 'kWh'},
-# 'SD_y': {'description': 'Standard deviation of the annual energy production due to year-to-year variation', 'units': 'kWh'},
-# 'l_aoi': {'description': 'Angle of incidence loss', 'units': '%'},
-# 'l_spec': {'description': 'Spectral loss', 'units': '%'},
-# 'l_tg': {'description': 'Temperature and irradiance loss', 'units': '%'},
-# 'l_total': {'description': 'Total loss', 'units': '%'}
-
-
 class PvgisRequestBuilder:
     def __init__(self) -> None:
         self.db = "PVGIS-SARAH2"
@@ -96,7 +81,7 @@ class PvgisRequestBuilder:
 
 
 def make_empty_response():
-    response = {"totals": {"fixed": {"E_y": 0, "E_m_exact": []}}, "monthly": {"fixed": []}, "orientation": "north"}
+    response = {"totals": {"fixed": {"E_y": 0, "E_m_exact": []}}, "monthly": {"fixed": []}, "orientation": "north", "roofId": -1}
     for _ in range(12):
         response["totals"]["fixed"]["E_m_exact"].append(0)
         response["monthly"]["fixed"].append({"E_m": 0})

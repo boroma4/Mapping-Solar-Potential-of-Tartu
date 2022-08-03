@@ -9,7 +9,7 @@ const sleep = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const getRequest = async (id, orientation, url) => {
+const getRequest = async (buildingId, roofId, orientation, url) => {
     const requestPromise = fetch(url);
 
     return new Promise(async (resolve, reject) => {
@@ -22,7 +22,7 @@ const getRequest = async (id, orientation, url) => {
                 console.log(response.text);
                 throw e;
             }
-            resolve([id, orientation, result["outputs"]]);
+            resolve([buildingId, roofId, orientation, result["outputs"]]);
         }
         catch(e) {
             console.log(e);
@@ -40,14 +40,14 @@ const processRequests = async (requestDataList) => {
     const numBatches = Math.ceil(countTotal / BATCH_LIMIT);
     console.log(`Sending requests to PVGIS API in batches, batch size: ${BATCH_LIMIT}, number of batches: ${numBatches}`);
 
-    for (const id of Object.keys(requestDataList)) {
-        const roofRequestList = requestDataList[id];
+    for (const buildingId of Object.keys(requestDataList)) {
+        const roofRequestList = requestDataList[buildingId];
         for (const roofRequest of roofRequestList){
-            const [orientation, payload] = roofRequest;
+            const [roofId, orientation, payload] = roofRequest;
 
             const urlParams = new URLSearchParams(payload).toString();
             const requestUrl = `${BASE_PVCALC_URL}?${urlParams}`;
-            const requestPromise = getRequest(id, orientation, requestUrl);
+            const requestPromise = getRequest(buildingId, roofId, orientation, requestUrl);
             
             batch.push(requestPromise);
 
@@ -75,17 +75,17 @@ const writeOutput = (resultsList) => {
     const output = {};
     
     for (const result of resultsList) {
-        const [id, orientation, data] = result;
+        const [buildingId, roofId, orientation, data] = result;
 
         // an error was returned, could be that roof area is too small
         if (!data){
             continue;
         }
 
-        if (output[id]) {
-            output[id].push({...data, orientation});
+        if (output[buildingId]) {
+            output[buildingId].push({...data, orientation, roofId});
         } else {
-            output[id] = [{...data, orientation}];
+            output[buildingId] = [{...data, orientation, roofId}];
         }
     }
 

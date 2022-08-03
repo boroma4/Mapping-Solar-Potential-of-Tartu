@@ -13,7 +13,8 @@ from lib.util.path import PathUtil
 
 
 class SolarPotentialPipeline(Pipeline):
-    def __init__(self, single_file_name: str, level: Level, pv_efficiency: float, pv_loss: float, roof_coverage: float, optimize_2d: bool, output_format: str, node_ram_limit: int) -> None:
+    def __init__(self, single_file_name: str, level: Level, pv_efficiency: float, pv_loss: float,
+                 roof_coverage: float, optimize_2d: bool, output_format: str, node_ram_limit: int) -> None:
         super().__init__(single_file_name)
         self.level = level
         self.pv_efficiency = pv_efficiency
@@ -56,8 +57,8 @@ class SolarPotentialPipeline(Pipeline):
 
     @timed("Building analysis")
     def __get_building_attributes(self, buildings: list[ET.Element]) -> dict:
-        count_total = len(buildings)
-        count_processed = 0
+        count_total_buildings = len(buildings)
+        count_processed_buildings = 0
         count_no_roofs = 0
         count_roofs = 0
         attribute_map = {}
@@ -84,10 +85,13 @@ class SolarPotentialPipeline(Pipeline):
 
                 count_roofs += 1
                 roof_attribs = {
+                    "id": count_roofs,
                     "area": surface.area,
                     "azimuth": surface.azimuth,
                     "tilt": surface.tilt,
-                    "orientation": surface.orientation}
+                    "orientation": surface.orientation,
+                    "points_epsg_3301": surface.points
+                }
 
                 # handling duplicated points
                 if roof_attribs not in attribute_map[building_id]["roofs"]:
@@ -95,7 +99,8 @@ class SolarPotentialPipeline(Pipeline):
 
             if "roofs" not in attribute_map[building_id]:
                 count_no_roofs += 1
-                attribute_map[building_id]["roofs"] = [{"area": 0, "azimuth": 0, "tilt": 0}]
+                attribute_map[building_id]["roofs"] = [
+                    {"id": -1, "area": 0, "azimuth": 0, "tilt": 0, "orientation": "none", "points": []}]
 
             building_attributes = attribute_map[building_id]
             roofs = building_attributes["roofs"]
@@ -111,6 +116,7 @@ class SolarPotentialPipeline(Pipeline):
             building_attributes["total_roof_area"] = round(total_roof_area, 2)
             building_attributes["lat"] = lat
             building_attributes["lon"] = lon
+
             self.__update_tree(xml_building, [
                 ["etak_id", "stringAttribute", building_id],
                 ["area", "doubleAttribute", total_roof_area],
@@ -120,12 +126,12 @@ class SolarPotentialPipeline(Pipeline):
                 ["east-area", "doubleAttribute", oriented_areas[EAST]],
                 ["flat-area", "doubleAttribute", oriented_areas[NONE]]])
 
-            count_processed += 1
-            if count_processed % 5000 == 0:
-                logging.info(f"Processed {count_processed}/{count_total} buildings")
+            count_processed_buildings += 1
+            if count_processed_buildings % 5000 == 0:
+                logging.info(f"Processed {count_processed_buildings}/{count_total_buildings} buildings")
 
         logging.info(
-            f"Roofs not detected for {count_no_roofs}/{count_total} buildings")
+            f"Roofs not detected for {count_no_roofs}/{count_total_buildings} buildings")
         logging.info(f"{count_roofs} roof surfaces detected")
 
         return attribute_map
@@ -138,7 +144,9 @@ class SolarPotentialPipeline(Pipeline):
         # For each building an array of it's roof surfaces is processed
         for building_id, data in attribute_map.items():
             payload_map[building_id] = []
+
             for roof in data["roofs"]:
+                roof_id = roof["id"]
                 roof_area = roof["area"]
                 orientation = roof["orientation"]
                 lat = data["lat"]
@@ -161,7 +169,7 @@ class SolarPotentialPipeline(Pipeline):
                 if roof["tilt"] <= MAX_FLAT_SURFACE_TILT:
                     request_builder.optimize_angles()
 
-                request_data = [orientation, request_builder.get_payload()]
+                request_data = [roof_id, orientation, request_builder.get_payload()]
                 payload_map[building_id].append(request_data)
 
         logging.info("Storing requests data to be processed by Node.js script")
@@ -192,13 +200,35 @@ class SolarPotentialPipeline(Pipeline):
             # shrink the dict a bit
             roofs_pv_list = [
                 data["totals"]["fixed"] | {
-                    "orientation": data["orientation"]} for data in pv_data[building_id]]
+                    "orientation": data["orientation"], "roof_id": data["roofId"]} for data in pv_data[building_id]]
 
             # In case yearly energy is None
             for roof_pv in roofs_pv_list:
                 roof_pv["E_y"] = roof_pv["E_y"] or 0
 
-            attribute_map[building_id] = {"building": attribute_map[building_id], "roofs_pv_list": roofs_pv_list}
+            
+            # variables:
+            # 'E_d': {'description': 'Average daily energy production from the given system', 'units': 'kWh/d'},
+            # 'E_m': {'description': 'Average monthly energy production from the given system', 'units': 'kWh/mo'},
+            # 'E_y': {'description': 'Average annual energy production from the given system', 'units': 'kWh/y'},
+            # 'H(i)_d': {'description': 'Average daily sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/d'},
+            # 'H(i)_m': {'description': 'Average monthly sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/mo'},
+            # 'H(i)_y': {'description': 'Average annual sum of global irradiation per square meter received by the modules of the given system', 'units': 'kWh/m2/y'},
+            # 'SD_m': {'description': 'Standard deviation of the monthly energy production due to year-to-year variation', 'units': 'kWh'},
+            # 'SD_y': {'description': 'Standard deviation of the annual energy production due to year-to-year variation', 'units': 'kWh'},
+            # 'l_aoi': {'description': 'Angle of incidence loss', 'units': '%'},
+            # 'l_spec': {'description': 'Spectral loss', 'units': '%'},
+            # 'l_tg': {'description': 'Temperature and irradiance loss', 'units': '%'},
+            # 'l_total': {'description': 'Total loss', 'units': '%'}
+
+            # Merge geo and geometry data with PV data by roof id in O(n*m) - not optimal
+            for roof in attribute_map[building_id]["roofs"]:
+                for roof_pv in roofs_pv_list:
+                    if roof["id"] == roof_pv["roof_id"]:
+                        roof["yearly_kwh"] = roof_pv["E_y"]
+                        roof["monthly_average_kwh"] = roof_pv["E_m"]
+                        roof["monthly_kwh"] = roof_pv["E_m_exact"]
+                        roof["total_loss"] = roof_pv["l_total"]
 
         return attribute_map
 
@@ -210,10 +240,9 @@ class SolarPotentialPipeline(Pipeline):
         total_monthly = [0] * 12
 
         for building_data in attribute_map.values():
-            roof_pv_data_list = building_data["roofs_pv_list"]
-            total_yearly += round(sum([el["E_y"] for el in roof_pv_data_list]), 3)
+            total_yearly += round(sum([el["yearly_kwh"] for el in building_data["roofs"]]), 3)
             for month in range(12):
-                total_monthly[month] += round(sum([el["E_m_exact"][month] for el in roof_pv_data_list]), 3)
+                total_monthly[month] += round(sum([el["monthly_kwh"][month] for el in building_data["roofs"]]), 3)
 
         output["total_yearly_energy_kwh"] = total_yearly
         output["total_monthly_energy_kwh_list"] = total_monthly
@@ -223,13 +252,13 @@ class SolarPotentialPipeline(Pipeline):
     def __write_solar_output_to_tree(self, buildings: list[ET.Element], attribute_map: dict) -> None:
         for xml_building in buildings:
             id = self.extract_integer_id(xml_building[0].attrib[ID])
-            roofs_pv = attribute_map[id]["roofs_pv_list"]
+            building_data = attribute_map[id]
 
-            total_yearly_power = round(sum([roof_pv["E_y"] for roof_pv in roofs_pv]), 3)
+            total_yearly_power = round(sum([roof["yearly_kwh"] for roof in building_data["roofs"]]), 3)
             oriented_power = {}
 
             for orientation in ORIENTATIONS:
-                power_list = [roof_pv["E_y"] for roof_pv in roofs_pv if roof_pv["orientation"] == orientation]
+                power_list = [roof["yearly_kwh"] for roof in building_data["roofs"] if roof["orientation"] == orientation]
                 oriented_power[orientation] = round(sum(power_list), 3)
 
             self.__update_tree(xml_building, [
