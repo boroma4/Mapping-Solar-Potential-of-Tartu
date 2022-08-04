@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 const BASE_PVCALC_URL = "https://re.jrc.ec.europa.eu/api/v5_2/PVcalc";
 const BATCH_LIMIT = 30;
 const RATE_LIMIT_COOLDOWN_MS = 1500;
+const MINUTE_MS = 60 * 1000;
 
 const sleep = async (ms) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,6 +71,11 @@ const processRequests = async (requestDataList) => {
     return promises;
 }
 
+const promiseAllWithTimeout = (promises, timeout) => {
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeout));
+    return Promise.race([Promise.all(promises), timeoutPromise]);
+}
+
 const writeOutput = (resultsList) => {
     console.log("Writing output")
     const output = {};
@@ -103,7 +109,7 @@ const tmpPath = args[0];
 const requestDataList = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
 const promises = await processRequests(requestDataList);
 console.log("Waiting for promises to resolve")
-const results = await Promise.all(promises);
+const results = await promiseAllWithTimeout(promises, MINUTE_MS);
 writeOutput(results);
 
 

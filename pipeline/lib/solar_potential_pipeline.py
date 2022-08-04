@@ -82,7 +82,7 @@ class SolarPotentialPipeline(Pipeline):
                 # A surface with area less than 2 m2 is not really suitable for solar panels
                 if not surface.is_roof(z_min) or surface.area < 2:
                     continue
-
+                    
                 count_roofs += 1
                 roof_attribs = {
                     "id": count_roofs,
@@ -97,13 +97,11 @@ class SolarPotentialPipeline(Pipeline):
                 if roof_attribs not in attribute_map[building_id]["roofs"]:
                     attribute_map[building_id]["roofs"].append(roof_attribs)
 
-            if "roofs" not in attribute_map[building_id]:
-                count_no_roofs += 1
-                attribute_map[building_id]["roofs"] = [
-                    {"id": -1, "area": 0, "azimuth": 0, "tilt": 0, "orientation": "none", "points": []}]
-
             building_attributes = attribute_map[building_id]
             roofs = building_attributes["roofs"]
+
+            if len(roofs) == 0:
+                count_no_roofs += 1
 
             total_roof_area = round(sum([roof["area"] for roof in roofs]), 3)
             oriented_areas = {}
@@ -142,15 +140,15 @@ class SolarPotentialPipeline(Pipeline):
         payload_map = {}
 
         # For each building an array of it's roof surfaces is processed
-        for building_id, data in attribute_map.items():
+        for building_id, building_data in attribute_map.items():
             payload_map[building_id] = []
 
-            for roof in data["roofs"]:
+            for roof in building_data["roofs"]:
                 roof_id = roof["id"]
                 roof_area = roof["area"]
                 orientation = roof["orientation"]
-                lat = data["lat"]
-                lon = data["lon"]
+                lat = building_data["lat"]
+                lon = building_data["lon"]
 
                 # area of the roof that can be covered
                 usable_roof_area = roof_area * self.roof_coverage
@@ -229,6 +227,14 @@ class SolarPotentialPipeline(Pipeline):
                         roof["monthly_average_kwh"] = roof_pv["E_m"]
                         roof["monthly_kwh"] = roof_pv["E_m_exact"]
                         roof["total_loss"] = roof_pv["l_total"]
+
+
+            # Requests that errored are not returned, writing no data here
+            for roof in attribute_map[building_id]["roofs"]:
+                roof["yearly_kwh"] = roof.get("yearly_kwh", 0)
+                roof["monthly_average_kwh"] = roof.get("monthly_average_kwh", 0)
+                roof["monthly_kwh"] = roof.get("monthly_kwh", [0] * 12)
+                roof["total_loss"] =  roof.get("total_loss", 0)
 
         return attribute_map
 

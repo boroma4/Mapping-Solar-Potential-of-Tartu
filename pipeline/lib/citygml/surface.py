@@ -1,3 +1,5 @@
+import math
+
 from xml.etree.ElementTree import Element
 from lib.util import geometry
 from lib.util.constants import *
@@ -25,10 +27,10 @@ class Surface:
             self.points.append(current_points)
 
     def is_roof(self, z_min: float) -> bool:
-        is_wall = self.tilt == 90
+        is_wall = self.tilt >= 90
         is_floor = all([point[2] == z_min for point in self.points])
 
-        return not is_wall and not is_floor
+        return self.__is_valid() and not is_wall and not is_floor
 
     def angles(self):
         return self.tilt, self.azimuth
@@ -43,3 +45,6 @@ class Surface:
         if 45 <= self.azimuth <= 135:
             return WEST
         return NORTH
+    
+    def __is_valid(self):
+        return all([not math.isnan(val) for val in [self.area, self.azimuth, self.tilt]])

@@ -33,7 +33,7 @@ docker run -v <full-path-to-repo>/data:/app/data pipeline --filename delta.gml -
 ```
 
 
-## Running the web app (automatically uses LOD2 data from /data/lod2)
+## Running the web app (automatically uses output data from /data/lod2)
 
 After running the pipeline run `./scripts/web.sh` to launch the web app. 
 Please do not run the app directly as there is an important preprocessing step done in the script.
