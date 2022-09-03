@@ -109,7 +109,7 @@ const tmpPath = args[0];
 const requestDataList = JSON.parse(readFileSync(`${tmpPath}/requests.json`));
 const promises = await processRequests(requestDataList);
 console.log("Waiting for promises to resolve")
-const results = await promiseAllWithTimeout(promises, MINUTE_MS);
+const results = await promiseAllWithTimeout(promises, 30 * MINUTE_MS);
 writeOutput(results);
 
 

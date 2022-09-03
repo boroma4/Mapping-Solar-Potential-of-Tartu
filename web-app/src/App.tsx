@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
 import cities from "../cities/meta.json";
-import CitySelector from "./components/CitySelector";
 import MapPage from "./pages/MapPage";
 import MainPage from "./pages/MainPage";
 

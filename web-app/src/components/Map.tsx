@@ -28,6 +28,16 @@ function Map({city}: Props) {
     return arr.map(([powerValueKwh, color]) => [`\${power} >= ${powerValueKwh}`, `color("${color}")`]);
   };
 
+  const rotateMap = () => {
+    const elmnt = document.getElementById("map");
+    const ellipsoid = viewer.scene.mapProjection.ellipsoid;
+    const windowCoordinates = new Cartesian2(elmnt!.offsetHeight / 2, elmnt!.offsetWidth / 2);
+    const ray = viewer.camera.getPickRay(windowCoordinates);
+    const intersection = IntersectionTests.rayEllipsoid(ray!, ellipsoid);
+    const intersectionPoint = Ray.getPoint(ray!, intersection.start);
+    viewer.camera.rotate(intersectionPoint, 0.7);
+  }
+
   const handleReady = async (tileset: Tileset) => {
     const conditions = createColorConditions();
     tileset.style = new Cesium3DTileStyle({
@@ -40,13 +50,7 @@ function Map({city}: Props) {
       viewer.camera.zoomIn(5000);
       
       // Rotate to prevent click unresponsiveness bug
-      const elmnt = document.getElementById("map");
-      const ellipsoid = viewer.scene.mapProjection.ellipsoid;
-      const windowCoordinates = new Cartesian2(elmnt!.offsetHeight / 2, elmnt!.offsetWidth / 2);
-      const ray = viewer.camera.getPickRay(windowCoordinates);
-      const intersection = IntersectionTests.rayEllipsoid(ray!, ellipsoid);
-      const intersectionPoint = Ray.getPoint(ray!, intersection.start);
-      viewer.camera.rotate(intersectionPoint, 0.7);
+      rotateMap();
     }
   };
 

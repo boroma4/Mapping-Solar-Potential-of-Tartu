@@ -7,6 +7,7 @@ import MonthlyPieChart from './MonthlyPieChars';
 import CityStats from './CityStats';
 import { CityPvInput } from '../types/PipepileInput';
 import BuildingColorLegend from './BuildingColorLegend';
+import BuildingDescriptionLegend from './BuildingDescriptionLegend';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -29,10 +30,11 @@ function Dashboard({city}: Props) {
             !pvData
               ? 'Loading dashboard...'
               : (
-                <div>
+                <div style={{overflowY: "scroll", height: "100vh"}}>
                   <CityStats pvData={pvData} />
                   <MonthlyPieChart pvData={pvData} />
                   <BuildingColorLegend />
+                  <BuildingDescriptionLegend/>
                 </div>
               )
       }

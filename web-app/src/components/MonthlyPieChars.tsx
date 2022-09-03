@@ -27,7 +27,7 @@ function MonthlyPieChart({ pvData }: Props) {
   return (
     <div>
       <h4>Power produced by month (kWh): </h4>
-      <Pie id="pie-char-1" data={monthlyData} />
+      <Pie id="pie-chart-1" data={monthlyData} />
     </div>
   );
 }
