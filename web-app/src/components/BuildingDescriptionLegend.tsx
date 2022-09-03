@@ -46,7 +46,7 @@ export default function BuildingDescriptionLegend() {
             <td>Estimated solar power produced from roof surfaces facing West</td>
         </tr>
         <tr>
-            <th>East-power</th>
+            <th>east-power</th>
             <td>Estimated solar power produced from roof surfaces facing East</td>
         </tr>
         <tr>
